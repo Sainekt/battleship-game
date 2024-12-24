@@ -4,9 +4,9 @@ import './globals.css';
 
 export default function Home() {
     return (
-            <div>
-                <Panel></Panel>
-                <Borad></Borad>
-            </div>
+        <div>
+            <Panel></Panel>
+            <Borad></Borad>
+        </div>
     );
 }

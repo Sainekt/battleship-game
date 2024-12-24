@@ -1,11 +1,12 @@
-export default function Square({ value, disabled, onSquareClick }) {
+export default function Square({ value, disabled, onSquareClick , className, text}) {
+    
     return (
         <button
-            className={disabled ? 'square square-disabled' : 'square'}
+            className={className}
             disabled={disabled}
             onClick={onSquareClick}
-        >
-            {value}
+            value={value}
+        >{text}
         </button>
     );
 }

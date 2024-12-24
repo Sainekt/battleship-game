@@ -1,18 +1,24 @@
 import { create } from 'zustand';
 
 const fleet = [
-    { name: 'Battleship', size: 4, quantity: 1 },
-    { name: 'Cruiser', size: 3, quantity: 2 },
-    { name: 'Submarine', size: 2, quantity: 3 },
-    { name: 'Destroyer', size: 1, quantity: 4 },
+    { id: 4, size: 4, quantity: 1 },
+    { id: 3, size: 3, quantity: 2 },
+    { id: 2, size: 2, quantity: 3 },
+    { id: 1, size: 1, quantity: 4 },
 ];
 
 const useStore = create((set) => ({
     player1: null,
     player2: null,
-    playersTurn: player1,
+    playersTurn: null,
     fleet1: [...fleet],
     fleet2: [...fleet],
+    ship: null,
+    setShip: (id) => set(() => {
+        return {ship: id}
+    })
+
+
 }));
 
 export default useStore;
