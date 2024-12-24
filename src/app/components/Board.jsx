@@ -23,7 +23,9 @@ function getBoard(
                     value={index}
                     disabled={disabled}
                     onSquareClick={handleClick}
-                    className={className}
+                    className={
+                        squares[index] ? `${className} square-panel` : className
+                    }
                     text={squares[index]}
                 />
             );
@@ -43,23 +45,22 @@ export default function Board() {
     const [squareDisabled, setSquareDisabled] = useState(true);
     const fleet = useStore((state) => state.fleet1);
     const ship = useStore((state) => state.ship);
-
-    function addShip(event) {
-        event.target.classList.add('square-panel')
-        
-    }
+    const sizeDecrement = useStore((state) => state.sizeDecrement);
+    const reset = useStore((state) => state.reset);
 
     function handleClickBorad1(event) {
-        const index = +event.target.value
-        
-        if (ship) {
-            return addShip(event);
+        const index = +event.target.value;
+        if (ship && !squares[index] && sizeDecrement()) {
+            setSquares((values) => {
+                const newValues = [...values];
+                    newValues[index] = 'O';
+                    return newValues;
+            });
         }
-        setSquares((values) => {
-            const newValues = [...values];
-            newValues[index] = 'x';            
-            return newValues;
-        });
+    }
+    function handleReset() {
+        setSquares(Array(100).fill(null));
+        reset();
     }
     function handleClickBorad2(i) {
         setSquares2((values) => {
@@ -79,6 +80,7 @@ export default function Board() {
 
     return (
         <div className='board-container'>
+            <button onClick={handleReset}>RESET</button>
             <div className='board'>
                 <div className='board-header'>
                     <div className='board-header-cell'></div>

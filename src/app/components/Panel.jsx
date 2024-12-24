@@ -7,14 +7,15 @@ export default function Panel() {
     const setShip = useStore((state) => state.setShip);
     const ship = useStore((state) => state.ship);
 
-    function getSquare(size) {
+    function getSquare(size, have) {
         const squares = [];
+        
         for (let i = 0; i < size; i++) {
             squares.push(
                 <Square
                     key={i}
-                    className={'square-panel square'}
-                    value={i + 1}
+                    className={ have - i > 0 ? 'square-panel square': 'square'}
+                    value={size}
                     // onSquareClick={''}
                 />
             );
@@ -36,11 +37,12 @@ export default function Panel() {
 
     return (
         <>
+            {ship ? <h2>selected: size {ship}</h2> : null}
             {fleet.map((el, i) => {
                 return (
                     <div key={i}>
-                        <h1>Quantity: {el.quantity}</h1>
-                        <div onClick={choiceShip}>{getSquare(el.id)}</div>
+                        <h4>Quantity: {el.quantity}</h4>
+                        <div onClick={choiceShip}>{getSquare(el.id, el.size)}</div>
                     </div>
                 );
             })}

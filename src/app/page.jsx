@@ -4,9 +4,13 @@ import './globals.css';
 
 export default function Home() {
     return (
-        <div>
-            <Panel></Panel>
-            <Borad></Borad>
+        <div className='container'>
+            <div className='item'>
+                <Panel></Panel>
+            </div>
+            <div className='item'>
+                <Borad></Borad>
+            </div>
         </div>
     );
 }
