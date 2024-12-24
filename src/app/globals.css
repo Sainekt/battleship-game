@@ -6,20 +6,46 @@
 .square {
   background: #fff;
   border: 1px solid #999;
-  float: left;
   font-size: 24px;
   font-weight: bold;
   line-height: 34px;
   height: 34px;
-  margin-right: -1px;
-  margin-top: -1px;
   padding: 0;
   text-align: center;
   width: 34px;
+  display: inline-block; /* Изменено с float на inline-block */
+}
+.square-disabled {
+  background: #333; /* Темный фон для неактивной кнопки */
+  color: #fff; /* Белый текст для контраста */
+  border: 1px solid #666; /* Более светлый бордер для неактивной кнопки */
+  cursor: not-allowed; /* Указатель "нельзя" при наведении */
 }
 
-.board-row:after {
-  clear: both;
-  content: '';
-  display: table;
+.board {
+  display: flex;
+  flex-direction: column; /* Устанавливаем вертикальное направление для строк */
+  margin: 50px;
+}
+
+.board-row {
+  display: flex; /* Используем flexbox для строк */
+}
+
+.board-header {
+  display: flex;
+}
+
+.board-header-cell {
+  width: 34px; /* Ширина ячейки */
+  height: 34px; /* Высота ячейки */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  border: 1px solid #000;
+}
+
+.board-container {
+  display: flex;
 }

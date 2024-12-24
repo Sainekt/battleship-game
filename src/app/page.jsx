@@ -1,10 +1,12 @@
 import Borad from './components/Board';
+import Panel from './components/Panel';
 import './globals.css';
 
 export default function Home() {
     return (
-        <div>
-            <Borad></Borad>
-        </div>
+            <div>
+                <Panel></Panel>
+                <Borad></Borad>
+            </div>
     );
 }
