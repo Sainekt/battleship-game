@@ -26,8 +26,10 @@ export default function Panel() {
     function choiceShip(event) {
         const id = event.target.value;
         const shipObj = fleet.find((ship) => ship.id === +id);
-
-        if (ship === null || shipObj.size === shipObj.id) {
+        if (shipObj.size !== shipObj.id) {
+            return false
+        }
+        if (ship === null) {
             setShip(id);
         }
         if (ship === id) {

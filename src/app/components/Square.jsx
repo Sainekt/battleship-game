@@ -3,7 +3,6 @@ export default function Square({
     disabled,
     onSquareClick,
     className,
-    text,
 }) {
     return (
         <button
@@ -11,8 +10,7 @@ export default function Square({
             disabled={disabled}
             onClick={onSquareClick}
             value={value}
-        >
-            <span hidden={true}>{text}</span>
-        </button>
+            hidden={true}
+        ></button>
     );
 }
