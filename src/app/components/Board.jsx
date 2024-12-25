@@ -2,6 +2,7 @@
 import Square from './Square';
 import { useState } from 'react';
 import useStore from '../context/Context';
+import { validCoord } from '../utils/coordinate';
 
 const CHAR_LIST = ['А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ж', 'З', 'И', 'К'];
 
@@ -47,40 +48,54 @@ export default function Board() {
     const ship = useStore((state) => state.ship);
     const sizeDecrement = useStore((state) => state.sizeDecrement);
     const reset = useStore((state) => state.reset);
+    const [direction, setDirection] = useState(null);
 
-    function validatePlace(i) {
-        const indexes = [
-            i - 11 > 0 ? i - 11 : 0,
-            i - 10 > 0 ? i - 10 : 0,
-            i - 9 > 0 ? i - 9 : 0,
-            i - 1 > 0 ? i - 1 : 0,
-            i + 1 < 100 ? i + 1 : i,
-            i + 9 < 100 ? i + 9 : i,
-            i + 10 < 100 ? i + 10 : i,
-            i + 11 < 100 ? i + 11 : i,
-        ];
-        
-        for (const i of indexes) {
-            if (squares[i] !== null && squares[i] !== ship) {
+    function validatePlace(i, value, selectShip) {
+        const shipCheck = validCoord[i]
+            ? validCoord[i]
+            : [i - 11, i - 10, i - 9, i - 1, i + 1, i + 9, i + 10, i + 11];
+
+        for (const index of shipCheck) {
+            if (squares[index] && squares[index] !== value) {
                 return false;
             }
         }
+        const allow = [i - 1, i + 1, i - 10, i + 10];
+        if (selectShip.size === selectShip.id) {
+            return true;
+        }
 
-        return true;
+        for (const index of allow) {
+            if (!direction && squares[index] === value) {
+                if (i - index === 10 || i - index === -10) {
+                    setDirection('v');
+                } else if (i - index === 1 || i - index === -1) {
+                    setDirection('h');
+                }
+                return true;
+            }
+        }
+        console.log(direction);
+
+        return false;
     }
 
     function handleClickBorad1(event) {
         const index = +event.target.value;
+        const selectShip = fleet.find((el) => el.id === +ship);
+        if (!selectShip) {
+            return;
+        }
+        const value = selectShip.type[selectShip.quantity - 1];
 
         if (
-            ship &&
             !squares[index] &&
-            validatePlace(index) &&
+            validatePlace(index, value, selectShip) &&
             sizeDecrement()
         ) {
             setSquares((values) => {
                 const newValues = [...values];
-                newValues[index] = ship;
+                newValues[index] = value;
                 return newValues;
             });
         }
