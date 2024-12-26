@@ -14,6 +14,9 @@ const useStore = create((set, get) => ({
     fleet1: [...fleet],
     fleet2: [...fleet],
     ship: '4',
+    direction: null,
+
+    setDirection: (direction) => set({ direction: direction }),
 
     setShip: (id) =>
         set(() => ({
@@ -31,6 +34,9 @@ const useStore = create((set, get) => ({
 
         if (shipObj.size > 0) {
             shipObj.size--;
+            if (!shipObj.size) {
+                set({ direction: null });
+            }
             if (shipObj.size === 0 && shipObj.quantity > 0) {
                 shipObj.quantity--;
                 shipObj.size = shipObj.quantity ? shipObj.id : 0;
@@ -40,7 +46,7 @@ const useStore = create((set, get) => ({
                 ...shipObj,
             };
             if (!shipObj.size && !shipObj.quantity > 0) {
-                set({ fleet1: updatedFleet, ship: null });
+                set({ fleet1: updatedFleet, ship: null, direction: null });
             }
             set({ fleet1: updatedFleet });
             return true;

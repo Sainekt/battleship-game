@@ -48,7 +48,7 @@ export default function Board() {
     const ship = useStore((state) => state.ship);
     const sizeDecrement = useStore((state) => state.sizeDecrement);
     const reset = useStore((state) => state.reset);
-    const [direction, setDirection] = useState(null);
+    const {direction, setDirection} = useStore(state => state)
 
     function validatePlace(i, value, selectShip) {
         const shipCheck = validCoord[i]
@@ -75,8 +75,23 @@ export default function Board() {
                 return true;
             }
         }
-        console.log(direction);
-
+        const vertical = [i - 10, i + 10];
+        const horizintal = [i - 1, i + 1];
+        if (direction === 'v') {
+            for (const index of vertical) {
+                if (squares[index] === value) {
+                    return true;
+                }
+            }
+        }
+        if (direction === 'h') {
+            for (const index of horizintal) {
+                if (squares[index] === value) {
+                    return true;
+                }
+            }
+        }
+        
         return false;
     }
 
@@ -102,6 +117,7 @@ export default function Board() {
     }
     function handleReset() {
         setSquares(Array(100).fill(null));
+        setDirection(null)
         reset();
     }
     function handleClickBorad2(i) {

@@ -25,16 +25,18 @@ export default function Panel() {
 
     function choiceShip(id) {
         const selectedShip = fleet.find((select) => select.id === id);
-
+        const prevShip = fleet.find((select) => select.id === +ship);
+        if (prevShip) {
+            if (prevShip.size === 0) {
+                setShip(selectedShip.id);
+            } else if (prevShip.size !== prevShip.id) {
+                setShip(prevShip.id);
+            } else {
+                setShip(selectedShip.id);
+            }
+        }
         if (!ship) {
-            setShip(id);
-        } else if (
-            selectedShip.size === selectedShip.id ||
-            selectedShip.size === 0
-        ) {
-            setShip(id);
-        } else if (selectedShip.id === +id && selectedShip.size === 0) {
-            setShip(null);
+            setShip(selectedShip.id);
         }
     }
 
