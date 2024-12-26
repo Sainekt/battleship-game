@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import Square from '../components/Square';
 
 const fleet = [
     { id: 4, size: 4, quantity: 1, type: ['A'] },
@@ -10,13 +11,32 @@ const fleet = [
 const useStore = create((set, get) => ({
     player1: null,
     player2: null,
+    gameStart: false,
     playersTurn: null,
     fleet1: [...fleet],
     fleet2: [...fleet],
-    ship: '4',
+    squares: Array(100).fill(null),
+    ship: null,
     direction: null,
+    ready: false,
+    allShipPlaced: false,
 
+    checkAllShipPlaced: (fleet = get().fleet1) => {
+        const count = fleet.reduce((accum, current) => {
+            if (!current.quantity && !current.size) {
+                accum++;
+            }
+            return accum;
+        }, 0);
+        if (count === 4) {
+            set({ allShipPlaced: true });
+            return
+        }
+        set({ allShipPlaced: false });
+    },
+    setSquares: (value) => set({ squares: value }),
     setDirection: (direction) => set({ direction: direction }),
+    setReady: () => set({ ready: !get().ready }),
 
     setShip: (id) =>
         set(() => ({
@@ -47,6 +67,7 @@ const useStore = create((set, get) => ({
             };
             if (!shipObj.size && !shipObj.quantity > 0) {
                 set({ fleet1: updatedFleet, ship: null, direction: null });
+                get().checkAllShipPlaced(updatedFleet);
             }
             set({ fleet1: updatedFleet });
             return true;

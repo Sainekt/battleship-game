@@ -41,7 +41,7 @@ function getBoard(
 }
 
 export default function Board() {
-    const [squares, setSquares] = useState(Array(100).fill(null));
+    const {squares, setSquares} = useStore(state => state)
     const [squares2, setSquares2] = useState(Array(100).fill(null));
     const [squareDisabled, setSquareDisabled] = useState(true);
     const fleet = useStore((state) => state.fleet1);
@@ -108,17 +108,10 @@ export default function Board() {
             validatePlace(index, value, selectShip) &&
             sizeDecrement()
         ) {
-            setSquares((values) => {
-                const newValues = [...values];
+                const newValues = [...squares];
                 newValues[index] = value;
-                return newValues;
-            });
+                setSquares(newValues);
         }
-    }
-    function handleReset() {
-        setSquares(Array(100).fill(null));
-        setDirection(null)
-        reset();
     }
     function handleClickBorad2(i) {
         setSquares2((values) => {
@@ -138,7 +131,6 @@ export default function Board() {
 
     return (
         <div className='board-container'>
-            <button onClick={handleReset}>RESET</button>
             <div className='board'>
                 <div className='board-header'>
                     <div className='board-header-cell'></div>
