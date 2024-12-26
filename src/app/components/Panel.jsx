@@ -2,6 +2,7 @@
 import useStore from '../context/Context';
 import Square from './Square';
 import { gameState } from '../context/Context';
+import { getShipCoord } from '../utils/utils';
 
 export default function Panel() {
     const {
@@ -16,10 +17,10 @@ export default function Panel() {
         allShipPlaced,
         checkAllShipPlaced,
         gameStart,
-        squares
+        squares,
     } = useStore((state) => state);
-    const {setBoardPlayer1} = gameState(state => state)
-    
+    const { setBoardPlayer1 } = gameState((state) => state);
+
     function getSquare(size, have) {
         const squares = [];
 
@@ -57,13 +58,13 @@ export default function Panel() {
         setSquares(Array(100).fill(null));
         setDirection(null);
         reset();
-        checkAllShipPlaced()
+        checkAllShipPlaced();
     }
 
     function handleReady() {
         if (allShipPlaced && gameStart) {
-            setReady()
-            setBoardPlayer1(squares)
+            setReady();
+            setBoardPlayer1(squares);
         }
     }
     return (
@@ -78,8 +79,12 @@ export default function Panel() {
                 );
             })}
             {ready ? <p>you are ready</p> : <p>you are don't ready</p>}
-            <button onClick={handleReset} disabled={ready}>RESET</button>
-            <button onClick={handleReady} disabled={!allShipPlaced}>{ready ? 'UNREADY' : 'READY'}</button>
+            <button onClick={handleReset} disabled={ready}>
+                RESET
+            </button>
+            <button onClick={handleReady} disabled={!allShipPlaced}>
+                {ready ? 'UNREADY' : 'READY'}
+            </button>
         </>
     );
 }

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { checkLive } from '../utils/utils';
 
 const fleet = [
     { id: 4, size: 4, quantity: 1, type: ['A'] },
@@ -27,7 +28,7 @@ const useStore = create((set, get) => ({
         }, 0);
         if (count === 4) {
             set({ allShipPlaced: true });
-            return
+            return;
         }
         set({ allShipPlaced: false });
     },
@@ -78,16 +79,18 @@ const useStore = create((set, get) => ({
 
 export default useStore;
 
-
 export const gameState = create((set, get) => ({
     player1: null,
     player2: null,
     boardPlayer1: null,
     boardPlayer2: null,
-    setBoardPlayer1: (board) => {set({boardPlayer1: board})},
-    setBoardPlayer2: (board) => {set({boardPlayer2: board})},
-    checkGame: () => {
-        
+    setBoardPlayer1: (board) => {
+        set({ boardPlayer1: board });
     },
-
-}))
+    setBoardPlayer2: (board) => {
+        set({ boardPlayer2: board });
+    },
+    checkGame: (squares) => {
+        checkLive(get().boardPlayer1, squares);
+    },
+}));

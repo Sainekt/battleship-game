@@ -3,7 +3,7 @@ import Square from './Square';
 import { useState } from 'react';
 import useStore from '../context/Context';
 import { validCoord } from '../utils/coordinate';
-import { getStyle } from '../utils/getStyle';
+import { getStyle } from '../utils/utils';
 import { gameState } from '../context/Context';
 
 const CHAR_LIST = ['А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ж', 'З', 'И', 'К'];
@@ -125,6 +125,7 @@ export default function Board() {
         setSquares2((values) => {
             const nevValuse = [...values];
             nevValuse[index] = marker;
+            checkGame(nevValuse);
             return nevValuse;
         });
     }
