@@ -3,10 +3,20 @@ import useStore from '../context/Context';
 import Square from './Square';
 
 export default function Panel() {
-    const fleet = useStore((state) => state.fleet1);
-    const setShip = useStore((state) => state.setShip);
-    const ship = useStore((state) => state.ship);
-
+    const {
+        fleet1: fleet,
+        setShip,
+        ship,
+        setSquares,
+        setDirection,
+        reset,
+        ready,
+        setReady,
+        allShipPlaced,
+        checkAllShipPlaced,
+        gameStart,
+    } = useStore((state) => state);
+    
     function getSquare(size, have) {
         const squares = [];
 
@@ -40,6 +50,18 @@ export default function Panel() {
         }
     }
 
+    function handleReset() {
+        setSquares(Array(100).fill(null));
+        setDirection(null);
+        reset();
+        checkAllShipPlaced()
+    }
+
+    function handleReady() {
+        if (allShipPlaced && !gameStart) {
+            setReady()
+        }
+    }
     return (
         <>
             {ship ? <h2>selected: size {ship}</h2> : null}
@@ -51,6 +73,9 @@ export default function Panel() {
                     </div>
                 );
             })}
+            {ready ? <p>you are ready</p> : <p>you are don't ready</p>}
+            <button onClick={handleReset} disabled={ready}>RESET</button>
+            <button onClick={handleReady} disabled={!allShipPlaced}>{ready ? 'UNREADY' : 'READY'}</button>
         </>
     );
 }
