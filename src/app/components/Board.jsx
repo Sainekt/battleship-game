@@ -3,30 +3,26 @@ import Square from './Square';
 import { useState } from 'react';
 import useStore from '../context/Context';
 import { validCoord } from '../utils/coordinate';
+import { getStyle } from '../utils/getStyle';
+import { gameState } from '../context/Context';
 
 const CHAR_LIST = ['А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ж', 'З', 'И', 'К'];
 
-function getBoard(
-    squares,
-    disabled = false,
-    handleClick,
-    className = 'square',
-    ship = false
-) {
+function getBoard(squares, disabled = false, handleClick, start = false) {
     const rows = [];
     for (let rowIndex = 0; rowIndex < 10; rowIndex++) {
         const row = [];
         for (let colIndex = 0; colIndex < 10; colIndex++) {
             const index = rowIndex * 10 + colIndex;
+            const styleClass = getStyle(start, disabled, squares[index]);
+
             row.push(
                 <Square
                     key={index}
                     value={index}
                     disabled={disabled}
                     onSquareClick={handleClick}
-                    className={
-                        squares[index] ? `${className} square-panel` : className
-                    }
+                    className={styleClass}
                     text={squares[index]}
                 />
             );
@@ -41,14 +37,18 @@ function getBoard(
 }
 
 export default function Board() {
-    const {squares, setSquares} = useStore(state => state)
+    const {
+        squares,
+        setSquares,
+        ready,
+        fleet1: fleet,
+        ship,
+        sizeDecrement,
+        direction,
+        setDirection,
+    } = useStore((state) => state);
     const [squares2, setSquares2] = useState(Array(100).fill(null));
-    const [squareDisabled, setSquareDisabled] = useState(true);
-    const fleet = useStore((state) => state.fleet1);
-    const ship = useStore((state) => state.ship);
-    const sizeDecrement = useStore((state) => state.sizeDecrement);
-    const reset = useStore((state) => state.reset);
-    const {direction, setDirection} = useStore(state => state)
+    const { checkGame, boardPlayer1 } = gameState((state) => state);
 
     function validatePlace(i, value, selectShip) {
         const shipCheck = validCoord[i]
@@ -91,7 +91,7 @@ export default function Board() {
                 }
             }
         }
-        
+
         return false;
     }
 
@@ -108,26 +108,29 @@ export default function Board() {
             validatePlace(index, value, selectShip) &&
             sizeDecrement()
         ) {
-                const newValues = [...squares];
-                newValues[index] = value;
-                setSquares(newValues);
+            const newValues = [...squares];
+            newValues[index] = value;
+            setSquares(newValues);
         }
     }
-    function handleClickBorad2(i) {
+    function handleClickBorad2(event) {
+        const index = +event.target.value;
+        if (!boardPlayer1) {
+            return;
+        }
+        let marker = '•';
+        if (boardPlayer1[index]) {
+            marker = 'X';
+        }
         setSquares2((values) => {
-            const newValues = [...values];
-            newValues[i] = 'X';
-            return newValues;
+            const nevValuse = [...values];
+            nevValuse[index] = marker;
+            return nevValuse;
         });
     }
 
-    const board = getBoard(squares, false, handleClickBorad1, 'square', ship);
-    const board2 = getBoard(
-        squares2,
-        squareDisabled,
-        handleClickBorad2,
-        'square-disabled square'
-    );
+    const board = getBoard(squares, false, handleClickBorad1);
+    const board2 = getBoard(squares2, !ready, handleClickBorad2);
 
     return (
         <div className='board-container'>

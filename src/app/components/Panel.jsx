@@ -1,6 +1,7 @@
 'use client';
 import useStore from '../context/Context';
 import Square from './Square';
+import { gameState } from '../context/Context';
 
 export default function Panel() {
     const {
@@ -15,7 +16,9 @@ export default function Panel() {
         allShipPlaced,
         checkAllShipPlaced,
         gameStart,
+        squares
     } = useStore((state) => state);
+    const {setBoardPlayer1} = gameState(state => state)
     
     function getSquare(size, have) {
         const squares = [];
@@ -58,8 +61,9 @@ export default function Panel() {
     }
 
     function handleReady() {
-        if (allShipPlaced && !gameStart) {
+        if (allShipPlaced && gameStart) {
             setReady()
+            setBoardPlayer1(squares)
         }
     }
     return (
