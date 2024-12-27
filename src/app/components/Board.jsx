@@ -2,8 +2,7 @@
 import Square from './Square';
 import { useState } from 'react';
 import useStore from '../context/Context';
-import { validCoord } from '../utils/coordinate';
-import { getStyle } from '../utils/utils';
+import { getStyle, markerMiss, validatePlace } from '../utils/utils';
 import { gameState } from '../context/Context';
 
 const CHAR_LIST = ['А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ж', 'З', 'И', 'К'];
@@ -50,51 +49,6 @@ export default function Board() {
     const [squares2, setSquares2] = useState(Array(100).fill(null));
     const { checkGame, boardPlayer1 } = gameState((state) => state);
 
-    function validatePlace(i, value, selectShip) {
-        const shipCheck = validCoord[i]
-            ? validCoord[i]
-            : [i - 11, i - 10, i - 9, i - 1, i + 1, i + 9, i + 10, i + 11];
-
-        for (const index of shipCheck) {
-            if (squares[index] && squares[index] !== value) {
-                return false;
-            }
-        }
-        const allow = [i - 1, i + 1, i - 10, i + 10];
-        if (selectShip.size === selectShip.id) {
-            return true;
-        }
-
-        for (const index of allow) {
-            if (!direction && squares[index] === value) {
-                if (i - index === 10 || i - index === -10) {
-                    setDirection('v');
-                } else if (i - index === 1 || i - index === -1) {
-                    setDirection('h');
-                }
-                return true;
-            }
-        }
-        const vertical = [i - 10, i + 10];
-        const horizintal = [i - 1, i + 1];
-        if (direction === 'v') {
-            for (const index of vertical) {
-                if (squares[index] === value) {
-                    return true;
-                }
-            }
-        }
-        if (direction === 'h') {
-            for (const index of horizintal) {
-                if (squares[index] === value) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
     function handleClickBorad1(event) {
         const index = +event.target.value;
         const selectShip = fleet.find((el) => el.id === +ship);
@@ -105,7 +59,7 @@ export default function Board() {
 
         if (
             !squares[index] &&
-            validatePlace(index, value, selectShip) &&
+            validatePlace(index, value, selectShip,squares, direction, setDirection) &&
             sizeDecrement()
         ) {
             const newValues = [...squares];
@@ -125,7 +79,15 @@ export default function Board() {
         setSquares2((values) => {
             const nevValuse = [...values];
             nevValuse[index] = marker;
-            checkGame(nevValuse);
+            const destroyShips = checkGame(nevValuse);
+            if (destroyShips.length) {
+                const markerMissSquares = markerMiss(destroyShips);
+                for (const i of markerMissSquares) {
+                    if (!nevValuse[i]) {
+                        nevValuse[i] = '•';
+                    }
+                }
+            }
             return nevValuse;
         });
     }

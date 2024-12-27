@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { checkLive } from '../utils/utils';
+import { checkLife } from '../utils/utils';
 
 const fleet = [
     { id: 4, size: 4, quantity: 1, type: ['A'] },
@@ -91,6 +91,10 @@ export const gameState = create((set, get) => ({
         set({ boardPlayer2: board });
     },
     checkGame: (squares) => {
-        checkLive(get().boardPlayer1, squares);
+        const destroyedShips = checkLife(get().boardPlayer1, squares);
+            if (destroyedShips.length === 10) {
+                // to do winner
+                }
+            return destroyedShips;
     },
 }));
