@@ -12,6 +12,55 @@ const connection = mysql.createConnection({
     database: process.env.DB_NAME,
 });
 
+function createTableUsers() {
+    const sql = `CREATE TABLE IF NOT EXISTS users (
+        id INT PRIMARY KEY AUTO_INCREMENT,
+        username VARCHAR(255) NOT NULL,
+        email VARCHAR(255),
+        password VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        CONSTRAINT unique_username UNIQUE (username),
+        CONSTRAINT unique_email UNIQUE (email)
+    );`;
+    connection.query(sql, (err, results) => {
+        if (err) {
+            console.log(err);
+        } else {
+            console.log(results);
+        }
+    });
+}
+
+function createTableGames() {
+    const sql = `CREATE TABLE IF NOT EXISTS games (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    player_1 INT NOT NULL,
+    player_2 INT NOT NULL,
+    winner INT,
+    status VARCHAR(50),
+    score INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (player_1) REFERENCES users(id),
+    FOREIGN KEY (player_2) REFERENCES users(id),
+    FOREIGN KEY (winner) REFERENCES users(id)
+    );`;
+    connection.query(sql, (err, results) => {
+        if (err) {
+            console.log(err);
+        } else {
+            console.log(results);
+        }
+    });
+}
+
+function createTables() {
+    createTableUsers();
+    createTableGames();
+    connection.end();
+}
+
 export async function createUser(username, password, email = null) {
     const hashedPassword = await hashPassword(password);
     return new Promise((resolve, reject) => {
