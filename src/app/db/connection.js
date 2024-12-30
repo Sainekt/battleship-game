@@ -139,3 +139,20 @@ export async function updateGame(gameId, status, winner, score) {
         console.log(`error: ${err}`);
     }
 }
+
+export async function getUserById(id) {
+    try {
+        const sql = `SELECT * FROM users WHERE id = ?`;
+        return new Promise((resolve, reject) => {
+            connection.query(sql, [id], (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    return resolve(result);
+                }
+            });
+        });
+    } catch (err) {
+        console.log(`error: ${err}`);
+    }
+}
