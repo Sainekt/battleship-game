@@ -1,22 +1,35 @@
-import { log } from 'console';
-import { object, string, z } from 'zod';
+'use server';
 
-export async function POST(request: Request): Response {
-    let error: { [key: string]: string } = {};
-    const User = z.object({
-        username: z.string().min(5).max(100),
-        password: z.string().min(5).max(100),
-        email: z.string().min(5).max(100).email(),
-    });
-    const data = await request.json();
+import { validateSignUpSignIn, validateJson } from '../../utils/validators';
+import { HEAREDS } from '../../utils/constants';
+import { createUser } from '../../db/connection';
+
+interface SignUpData {
+    username: string;
+    password: string;
+    email: string;
+}
+
+export async function POST(request: Request): Promise<Response> {
+    const data: SignUpData = await validateJson(request);
     const { username, password, email } = data;
-    if (!username) {
-        error['username'] = 'field is required';
+    const result = validateSignUpSignIn(data);
+    if (!result.success) {
+        return new Response(JSON.stringify(result), {
+            status: 400,
+            headers: HEAREDS,
+        });
     }
-    if (!password) {
-        error['password'] = 'field is required';
+    try {
+        await createUser(username, password, email);
+    } catch (error) {
+        return new Response(
+            JSON.stringify({ error: 'username or email is already exists' }),
+            {
+                status: 400,
+                headers: HEAREDS,
+            }
+        );
     }
-    if (Object.keys(error).length !== 0) {
-        return new Response(JSON.stringify(error), { status: 400 });
-    }
+    return new Response(null, { status: 201, headers: HEAREDS });
 }

@@ -81,7 +81,7 @@ export async function createUser(username, password, email = null) {
 
 export async function getUser(username) {
     return new Promise((resolve, reject) => {
-        const sql = `SELECT id, username, email FROM users WHERE username = ?`;
+        const sql = `SELECT id, username, password, email FROM users WHERE username = ?`;
         connection.query(sql, [username], (err, results) => {
             if (err) {
                 return reject(err);
