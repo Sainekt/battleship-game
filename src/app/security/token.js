@@ -1,8 +1,6 @@
+'use server'
 import * as jose from 'jose';
-import dotenv from 'dotenv';
-import { decode } from 'punycode';
-
-dotenv.config({ path: '../../../.env' });
+import { cookies } from 'next/headers';
 
 const SECRET_KEY = new TextEncoder().encode(process.env.SECRET_KEY);
 
@@ -20,4 +18,10 @@ export async function generateToken(username) {
 export async function decodeToken(token) {
     const decoded = await jose.jwtVerify(token, SECRET_KEY);
     return decoded.payload;
+}
+
+export async function setCookieToken(token) {
+    const cookieStore = await cookies()
+    cookieStore.set('token', `Bearer ${token}`)
+    return
 }

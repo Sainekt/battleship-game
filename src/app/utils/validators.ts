@@ -1,4 +1,4 @@
-import { object, z } from 'zod';
+import { z } from 'zod';
 import { decodeToken } from '../security/token';
 import { JWTPayload } from 'jose';
 
@@ -25,11 +25,14 @@ export function validateSignUpSignIn(data: object) {
 }
 
 export async function validateToken(token: string): Promise<Boolean> {
+    try {
     const date: number = new Date().getTime() / 1000;
     const decode: JWTPayload = await decodeToken(token);
     const expred: number = decode.exp - date;
     if (expred > 0) {
         return true;
+    }}
+    catch {
     }
     return false;
 }

@@ -27,8 +27,9 @@
     "next-env.d.ts",
     ".next/types/**/*.ts",
     "**/*.ts",
-    "**/*.tsx"
-, "src/app/security/token.js"  ],
+    "**/*.tsx",
+    "src/app/security/token.js"
+  ],
   "exclude": [
     "node_modules"
   ]

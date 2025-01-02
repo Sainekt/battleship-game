@@ -1,9 +1,7 @@
 'use server';
 import mysql from 'mysql2';
-import dotenv from 'dotenv';
-import { hashPassword, comparePassword } from '../security/password.js';
+import { hashPassword } from '../security/password.js';
 
-dotenv.config({ path: '../../../.env' });
 
 const connection = mysql.createConnection({
     host: process.env.DB_HOST,
