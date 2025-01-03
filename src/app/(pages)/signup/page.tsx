@@ -58,6 +58,7 @@ export default function SignUp() {
                     <input
                         type='text'
                         name='username'
+                        id='username'
                         required
                         placeholder='username'
                         value={username}
@@ -79,6 +80,7 @@ export default function SignUp() {
                     <input
                         type='password'
                         name='password'
+                        id='password'
                         required
                         placeholder='password'
                         value={password}
@@ -101,6 +103,7 @@ export default function SignUp() {
                     <input
                         type='password'
                         name='confirmPassword'
+                        id='confirmPassword'
                         required
                         placeholder='confirm password'
                         value={confirmPassword}
@@ -121,6 +124,7 @@ export default function SignUp() {
                     <input
                         type='email'
                         name='email'
+                        id='email'
                         placeholder='not required'
                         value={email}
                         onChange={(e) => {

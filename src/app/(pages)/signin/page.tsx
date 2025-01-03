@@ -41,6 +41,7 @@ export default function SignUp() {
                     <input
                         type='text'
                         name='username'
+                        id='username'
                         required
                         placeholder='username'
                         value={username}
@@ -62,6 +63,7 @@ export default function SignUp() {
                     <input
                         type='password'
                         name='password'
+                        id='password'
                         required
                         placeholder='password'
                         value={password}

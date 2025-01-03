@@ -14,6 +14,6 @@ export async function signInMiddleware(request: NextRequest) {
             return NextResponse.redirect(new URL('/', request.url));
         }
     } catch (error) {
-        return NextResponse.next()
+        return NextResponse.next();
     }
 }

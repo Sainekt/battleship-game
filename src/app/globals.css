@@ -60,3 +60,46 @@
 .item:last-child {
   margin-right: 0;
 }
+
+.navbar {
+  display: flex;
+  justify-content: space-between; /* Распределяет элементы по краям */
+  align-items: center; /* Выравнивает элементы по вертикали */
+  padding: 10px 20px; /* Отступы внутри navbar */
+  background-color: #f8f9fa; /* Цвет фона */
+  border-bottom: 1px solid #dee2e6; /* Нижняя граница */
+}
+
+.userInfo {
+  flex: 0 0 100px; /* Фиксированная ширина для userInfo */
+  text-align: left; /* Выравнивание текста по левому краю */
+  margin-right: 10px; /* Отступ справа для разделения */
+  overflow: hidden; /* Скрывает переполнение */
+  white-space: nowrap; /* Запрещает перенос строк */
+}
+
+.navButtons {
+  display: flex; /* Выравнивание кнопок по горизонтали */
+  justify-content: center; /* Центрирует кнопки */
+  flex: 1; /* Занимает пространство по центру */
+}
+
+.button-nav {
+  margin: 0 10px; /* Отступы между кнопками */
+  padding: 10px 15px; /* Отступы внутри кнопок */
+  border: none; /* Убирает границу */
+  border-radius: 5px; /* Закругленные углы */
+  background-color: #007bff; /* Цвет фона кнопок */
+  color: white; /* Цвет текста кнопок */
+  cursor: pointer; /* Указатель при наведении */
+}
+
+.logoutButton {
+  padding: 10px 15px; /* Отступы внутри кнопки выхода */
+  text-decoration: none;
+  border: none; /* Убирает границу */
+  border-radius: 5px; /* Закругленные углы */
+  background-color: #dc3545; /* Цвет фона кнопки выхода */
+  color: white; /* Цвет текста кнопки выхода */
+  cursor: pointer; /* Указатель при наведении */
+}

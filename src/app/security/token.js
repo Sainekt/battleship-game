@@ -1,4 +1,4 @@
-'use server'
+'use server';
 import * as jose from 'jose';
 import { cookies } from 'next/headers';
 
@@ -21,7 +21,13 @@ export async function decodeToken(token) {
 }
 
 export async function setCookieToken(token) {
-    const cookieStore = await cookies()
-    cookieStore.set('token', `Bearer ${token}`)
-    return
+    const cookieStore = await cookies();
+    cookieStore.set('token', `Bearer ${token}`);
+    return;
+}
+
+export async function removeCookieToken() {
+    const cookieStore = await cookies();
+    cookieStore.delete('token');
+    return;
 }
