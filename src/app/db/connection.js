@@ -2,7 +2,6 @@
 import mysql from 'mysql2';
 import { hashPassword } from '../security/password.js';
 
-
 const connection = mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -153,4 +152,41 @@ export async function getUserById(id) {
     } catch (err) {
         console.log(`error: ${err}`);
     }
+}
+
+async function getGames(userId) {
+    try {
+        const sql = `SELECT * FROM games WHERE player_1 = ? || player_2 = ?`;
+        return new Promise((resolve, reject) => {
+            connection.query(sql, [userId, userId], (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    return resolve(result);
+                }
+            });
+        });
+    } catch (err) {
+        console.log(`error: ${err}`);
+    }
+}
+
+export async function getStats(username) {
+    const users = await getUser(username);
+    const user = users[0];
+    const games = await getGames(user.id);
+    const victories = games.reduce((accum, current) => {
+        if (current.winner === user.id) {
+            return accum + 1;
+        }
+        return accum;
+    }, 0);
+    const losses = games.length - victories;
+    const avg = losses > 0 ? victories / losses : 0;
+    return {
+        countGames: games.length,
+        victories: victories,
+        losses: losses,
+        avg: avg,
+    };
 }

@@ -31,3 +31,16 @@ export async function removeCookieToken() {
     cookieStore.delete('token');
     return;
 }
+
+export async function getToken() {
+    const cookieStore = await cookies();
+    const tokenObj = cookieStore.get('token').value;
+    const [prefix, token] = tokenObj.split(' ');
+    return token;
+}
+
+export async function getUsername() {
+    const token = await getToken();
+    const decoded = await decodeToken(token);
+    return decoded.username;
+}
