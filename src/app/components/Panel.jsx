@@ -2,7 +2,6 @@
 import useStore from '../context/Context';
 import Square from './Square';
 import { gameState } from '../context/Context';
-import { getShipCoord } from '../utils/utils';
 
 export default function Panel() {
     const {
@@ -19,7 +18,7 @@ export default function Panel() {
         gameStart,
         squares,
     } = useStore((state) => state);
-    const { setBoardPlayer1 } = gameState((state) => state);
+    const { setBoardPlayer1,  } = gameState((state) => state);
 
     function getSquare(size, have) {
         const squares = [];

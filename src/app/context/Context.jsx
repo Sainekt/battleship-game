@@ -84,17 +84,21 @@ export const gameState = create((set, get) => ({
     player2: null,
     boardPlayer1: null,
     boardPlayer2: null,
-    setBoardPlayer1: (board) => {
-        set({ boardPlayer1: board });
-    },
-    setBoardPlayer2: (board) => {
-        set({ boardPlayer2: board });
+    winner: null,
+    roomId: null,
+
+    setPlayer1: (id) => set({ player1: id }),
+    setPlayer2: (id) => set({ player2: id }),
+    setBoardPlayer1: (board) => set({ boardPlayer1: board }),
+    setBoardPlayer2: (board) => set({ boardPlayer2: board }),
+    setRoomId: (id) => {
+        set({ roomId: id });
     },
     checkGame: (squares) => {
         const destroyedShips = checkLife(get().boardPlayer1, squares);
-            if (destroyedShips.length === 10) {
-                // to do winner
-                }
-            return destroyedShips;
+        if (destroyedShips.length === 10) {
+            // to do winner
+        }
+        return destroyedShips;
     },
 }));

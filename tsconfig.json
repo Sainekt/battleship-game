@@ -29,7 +29,7 @@
     "**/*.ts",
     "**/*.tsx",
     "src/app/security/token.js"
-  ],
+, "server.js", "src/socket.js"  ],
   "exclude": [
     "node_modules"
   ]
