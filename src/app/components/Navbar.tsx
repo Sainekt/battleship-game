@@ -3,12 +3,19 @@ import Link from 'next/link';
 import { removeCookieToken, getUsername } from '../security/token';
 import { getStats } from '../db/connection';
 import { useState, useEffect } from 'react';
+import { userStore } from '../context/Context';
 
 export default function NavBar() {
-    const [username, setUsername] = useState(null);
-    const [games, setGames] = useState(null);
-    const [victories, setVictories] = useState(null);
-    const [avg, setAvg] = useState(null);
+    const {
+        username,
+        setUsername,
+        games,
+        setGames,
+        victories,
+        setVictories,
+        avg,
+        setAvg,
+    } = userStore((state) => state);
 
     useEffect(() => {
         getUsername()

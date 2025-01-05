@@ -79,6 +79,17 @@ const useStore = create((set, get) => ({
 
 export default useStore;
 
+export const userStore = create((set, get) => ({
+    username: null,
+    games: null,
+    victories: null,
+    avg: null,
+    setUsername: (username) => set({ username: username }),
+    setGames: (games) => set({ games: games }),
+    setVictories: (victories) => set({ victories: victories }),
+    setAvg: (avg) => set({ avg: avg }),
+}));
+
 export const gameState = create((set, get) => ({
     player1: null,
     player2: null,

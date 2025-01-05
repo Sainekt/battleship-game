@@ -12,34 +12,46 @@ const rooms = {}; // Объект для хранения комнат
 
 app.prepare().then(() => {
     const httpServer = createServer(handler);
-    const io = new Server(httpServer);
+    const io = new Server(httpServer, {
+        connectionStateRecovery: {
+            maxDisconnectionDuration: 2 * 60 * 1000,
+            skipMiddlewares: true,
+        },
+    });
 
     io.on('connection', (socket) => {
+        if (socket.recovered) {
+            console.log('Client reconnected');
+        } else {
+            console.log('not recinnected');
+        }
         console.log(`Connection: ${socket.id}`);
 
         // Обработка запроса на создание комнаты
-        socket.on('createRoom', () => {
+        socket.on('createRoom', (username) => {
             const roomId = Math.random().toString(36).substring(2, 8); // Генерация случайного ID комнаты
-            rooms[roomId] = { players: [socket.id] }; // Создание новой комнаты
+            const player = { username: username, socketId: socket.id };
+            rooms[roomId] = { players: [player] };
             socket.join(roomId); // Подключение игрока к комнате
             console.log(`Room created: ${roomId}`);
 
-            socket.emit('roomCreated', [roomId, socket.id]); // Отправка ID комнаты клиенту
+            socket.emit('roomCreated', { roomId: roomId, username: username }); // Отправка ID комнаты клиенту
         });
 
         // Обработка запроса на присоединение к комнате
-        socket.on('joinRoom', (roomId) => {
+        socket.on('joinRoom', ({ roomId, username }) => {
             if (!rooms[roomId]) {
                 return socket.emit('notFound', roomId);
             }
             if (rooms[roomId].players.find((value) => value === socket.id)) {
                 return socket.emit('alreadyInRoom', roomId);
             }
+            const player = { username: username, socketId: socket.id };
             if (rooms[roomId].players.length < 2) {
-                rooms[roomId].players.push(socket.id); // Добавление игрока в комнату
+                rooms[roomId].players.push(player); // Добавление игрока в комнату
                 socket.join(roomId); // Подключение игрока к комнате
                 console.log(`Player ${socket.id} joined room: ${roomId}`);
-                socket.emit('joinedRoom', [roomId, socket.id]); // Подтверждение присоединения
+                socket.emit('joinedRoom', [roomId, rooms[roomId].players]); // Подтверждение присоединения
             } else {
                 socket.emit('roomFull', roomId); // Комната полна
             }
@@ -48,17 +60,15 @@ app.prepare().then(() => {
         socket.on('disconnect', () => {
             console.log(`Disconnected ${socket.id}`);
             for (const roomId in rooms) {
-                if (rooms[roomId].players.includes(socket.id)) {
-                    rooms[roomId].players = rooms[roomId].players.filter(
-                        (id) => id !== socket.id
-                    );
-                    if (rooms[roomId].players.length === 0) {
-                        console.log(`room delete: ${roomId}`);
-                        delete rooms[roomId];
-                    }
-                    console.log(`Player ${socket.id} left room: ${roomId}`);
-                    break;
+                rooms[roomId].players = rooms[roomId].players.filter(
+                    (value) => value.socketId !== socket.id
+                );
+                if (rooms[roomId].players.length === 0) {
+                    console.log(`room delete: ${roomId}`);
+                    delete rooms[roomId];
                 }
+                console.log(`Player ${socket.id} left room: ${roomId}`);
+                break;
             }
         });
     });
