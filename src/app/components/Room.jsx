@@ -2,69 +2,103 @@
 import { useEffect } from 'react';
 import { io } from 'socket.io-client';
 import { gameState, userStore } from '../context/Context';
+import { UpdateSocketState } from '../../socket';
 
 const socket = io();
 
 export default function Createroom() {
-    const { roomId, setRoomId, setPlayer1, setPlayer2, player1, player2 } =
-        gameState((state) => state);
+    const {
+        roomId,
+        setRoomId,
+        setPlayer1,
+        setPlayer2,
+        player1,
+        player2,
+        winner,
+        boardPlayer1,
+        boardPlayer2,
+    } = gameState((state) => state);
     const { username } = userStore((state) => state);
 
     useEffect(() => {
-        // Слушаем событие создания комнаты
-        socket.on('roomCreated', (data) => {
-            setRoomId(data.roomId);
-            setPlayer1(data.username);
-            setPlayer2(null); // Сбрасываем имя второго игрока
-            console.log(`Room created: ${data.roomId} by ${data.username}`);
+        socket.on('roomCreated', (room) => {
+            console.log(room);
+            setRoomId(room);
+            setPlayer1(room);
+            setPlayer2(null);
+            console.log(`Room created: ${room} by ${username}`);
         });
 
-        // Слушаем событие присоединения к комнате
-        socket.on('joinedRoom', (data) => {
-            setRoomId(data[0]);
-
-            setPlayer1(data[1][0].username); // Устанавливаем имя первого игрока
-            setPlayer2(data[1][1]?.username || null); // Устанавливаем имя второго игрока, если он есть
-            console.log(`Joined room: ${data.roomId}`);
+        socket.on('joinedRoom', (username) => {
+            setPlayer2(username);
+            console.log(`Joined room: ${username}`);
+            const state = {
+                roomId: roomId,
+                player1: player1,
+                player2: username,
+            };
+            socket.emit('updateState', state);
+        });
+        socket.on('loadState', (state) => {
+            setPlayer1(state.player1);
+            setPlayer2(state.player2);
+            setRoomId(state.roomId);
         });
 
-        // Обработка других событий
         socket.on('roomFull', (id) => {
             alert(`Room ${id} is full`);
         });
         socket.on('notFound', (id) => {
-            alert(`Room ${id} not found`);
+            return alert(`Room ${id} not found`);
         });
         socket.on('alreadyInRoom', (id) => {
             alert(`You are already in the room ${id}`);
         });
 
+        socket.on('leaveRoom', (player) => {
+            if (player === 'admin') {
+                setPlayer1(null);
+                setPlayer2(null);
+                setRoomId(null);
+            } else {
+                setPlayer2(null);
+            }
+        });
+
         return () => {
-            // Очистка обработчиков событий при размонтировании компонента
             socket.off('roomCreated');
             socket.off('joinedRoom');
             socket.off('roomFull');
         };
-    }, [setPlayer1, setPlayer2, setRoomId]);
+    }, [roomId, player2]);
 
-    const handleCreateRoom = () => {
-        socket.emit('createRoom', username); // Отправляем имя пользователя на сервер
-    };
+    function handleCreateRoom() {
+        socket.emit('createRoom', username);
+    }
 
-    const handleJoinRoom = () => {
-        const roomId = prompt('Enter room ID:');
-        if (roomId) {
-            socket.emit('joinRoom', { roomId, username }); // Отправляем ID комнаты и имя пользователя на сервер
+    function handleJoinRoom() {
+        const roomId = prompt('please enter room id');
+        if (!roomId) {
+            return;
         }
-    };
+        socket.emit('joinRoom', roomId, username);
+    }
+
+    function handleLeaveRoom() {
+        setPlayer1(null);
+        setPlayer2(null);
+        setRoomId(null);
+        socket.emit('leaveRoom', username);
+    }
 
     return (
         <>
             <h2>Room ID: {roomId || 'No room'}</h2>
             <button onClick={handleCreateRoom}>Create Room</button>
-            <button onClick={handleJoinRoom}>Join Room</button>
+            <button onClick={handleJoinRoom}>join room</button>
             <p>Player 1: {player1}</p>
             <p>Player 2: {player2}</p>
+            <button onClick={handleLeaveRoom}>Leave room</button>
         </>
     );
 }
