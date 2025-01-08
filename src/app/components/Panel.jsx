@@ -2,8 +2,10 @@
 import useStore from '../context/Context';
 import Square from './Square';
 import { gameState, userStore } from '../context/Context';
-
+import useSendGameState from '../hooks/useSendGameState';
 export default function Panel() {
+    useSendGameState();
+
     const {
         fleet1: fleet,
         setShip,
@@ -18,8 +20,15 @@ export default function Panel() {
         gameStart,
         squares,
     } = useStore((state) => state);
-    const { setBoardPlayer1, setPlayer1Ready, setPlayer2Ready, roomId } =
-        gameState((state) => state);
+    const {
+        setBoardPlayer1,
+        setPlayer1Ready,
+        setPlayer2Ready,
+        roomId,
+        setBoardPlayer2,
+        player1Ready,
+        game,
+    } = gameState((state) => state);
 
     const { username } = userStore((state) => state);
 
@@ -67,11 +76,12 @@ export default function Panel() {
         if (allShipPlaced && roomId) {
             setReady();
             if (username == roomId) {
+                setBoardPlayer1(squares);
                 setPlayer1Ready(!ready);
             } else {
                 setPlayer2Ready(!ready);
+                setBoardPlayer2(squares);
             }
-            setBoardPlayer1(squares);
         }
     }
     return (
@@ -89,7 +99,7 @@ export default function Panel() {
             <button onClick={handleReset} disabled={ready}>
                 RESET
             </button>
-            <button onClick={handleReady} disabled={!allShipPlaced}>
+            <button onClick={handleReady} disabled={!allShipPlaced || game}>
                 {ready ? 'UNREADY' : 'READY'}
             </button>
         </>

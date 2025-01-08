@@ -3,7 +3,7 @@ import Square from './Square';
 import { useState } from 'react';
 import useStore from '../context/Context';
 import { getStyle, markerMiss, validatePlace } from '../utils/utils';
-import { gameState } from '../context/Context';
+import { gameState, userStore } from '../context/Context';
 
 const CHAR_LIST = ['А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ж', 'З', 'И', 'К'];
 
@@ -47,7 +47,10 @@ export default function Board() {
         setDirection,
     } = useStore((state) => state);
     const [squares2, setSquares2] = useState(Array(100).fill(null));
-    const { checkGame, boardPlayer1 } = gameState((state) => state);
+    const { checkGame, boardPlayer1, boardPlayer2, roomId } = gameState(
+        (state) => state
+    );
+    const { username } = userStore((state) => state);
 
     function handleClickBorad1(event) {
         const index = +event.target.value;
@@ -59,7 +62,14 @@ export default function Board() {
 
         if (
             !squares[index] &&
-            validatePlace(index, value, selectShip,squares, direction, setDirection) &&
+            validatePlace(
+                index,
+                value,
+                selectShip,
+                squares,
+                direction,
+                setDirection
+            ) &&
             sizeDecrement()
         ) {
             const newValues = [...squares];
@@ -69,17 +79,26 @@ export default function Board() {
     }
     function handleClickBorad2(event) {
         const index = +event.target.value;
-        if (!boardPlayer1) {
+        let board;
+        if (!roomId) {
+            return;
+        }
+        if (roomId === username) {
+            board = boardPlayer2;
+        } else {
+            board = boardPlayer1;
+        }
+        if (!board) {
             return;
         }
         let marker = '•';
-        if (boardPlayer1[index]) {
+        if (board[index]) {
             marker = 'X';
         }
         setSquares2((values) => {
             const nevValuse = [...values];
             nevValuse[index] = marker;
-            const destroyShips = checkGame(nevValuse);
+            const destroyShips = checkGame(nevValuse, board);
             if (destroyShips.length) {
                 const markerMissSquares = markerMiss(destroyShips);
                 for (const i of markerMissSquares) {

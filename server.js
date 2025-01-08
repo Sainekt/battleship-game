@@ -8,8 +8,6 @@ const port = 3000;
 const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();
 
-const rooms = {}; // Объект для хранения комнат
-
 app.prepare().then(() => {
     const httpServer = createServer(handler);
     const io = new Server(httpServer, {
@@ -20,7 +18,7 @@ app.prepare().then(() => {
     });
 
     io.on('connection', (socket) => {
-        // To do : add reconect
+        // TODO : add reconect
         // if (socket.recovered) {
         //     console.log('Client reconnected');
         // } else {
@@ -48,20 +46,22 @@ app.prepare().then(() => {
             socket.to(roomId).emit('joinedRoom', username);
         });
 
+        socket.on('shot', (shot) => {
+            socket.to(socket.roomId).emit('shot', shot);
+        });
+
         socket.on('updateState', (gameState) => {
             socket.to(gameState.roomId).emit('loadState', gameState);
         });
 
         socket.on('sendState', (gameState) => {
-            console.log(gameState);
-            console.log(gameState.roomId);
-            console.log(io.of('/').adapter.rooms);
-            
             socket.to(gameState.roomId).emit('sendState', gameState);
         });
 
         socket.on('leaveRoom', (username) => {
             console.log(`User left room: ${username}`);
+            console.log(socket.roomId);
+
             if (socket.roomId === username) {
                 socket.leave(socket.roomId);
                 socket.to(socket.roomId).emit('leaveRoom', 'admin');

@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { io } from 'socket.io-client';
 import { gameState, userStore } from '../context/Context';
 
-const socket = io();
+export const socket = io();
 
 export default function Createroom() {
     const {
@@ -11,17 +11,22 @@ export default function Createroom() {
         setRoomId,
         setPlayer1,
         setPlayer2,
+        player1Ready,
+        player2Ready,
+        setPlayer1Ready,
+        setPlayer2Ready,
         player1,
         player2,
         winner,
         boardPlayer1,
         boardPlayer2,
+        game,
     } = gameState((state) => state);
+
     const { username } = userStore((state) => state);
 
     useEffect(() => {
         socket.on('roomCreated', (room) => {
-            console.log(room);
             setRoomId(room);
             setPlayer1(room);
             setPlayer2(null);
@@ -59,6 +64,7 @@ export default function Createroom() {
                 setPlayer1(null);
                 setPlayer2(null);
                 setRoomId(null);
+                socket.emit('leaveRoom', username);
             } else {
                 setPlayer2(null);
             }
@@ -93,11 +99,21 @@ export default function Createroom() {
     return (
         <>
             <h2>Room ID: {roomId || 'No room'}</h2>
-            <button onClick={handleCreateRoom}>Create Room</button>
-            <button onClick={handleJoinRoom}>join room</button>
-            <p>Player 1: {player1}</p>
-            <p>Player 2: {player2}</p>
-            <button onClick={handleLeaveRoom}>Leave room</button>
+            <button onClick={handleCreateRoom} disabled={roomId}>
+                Create Room
+            </button>
+            <button onClick={handleJoinRoom} disabled={roomId}>
+                join room
+            </button>
+            <p>
+                Player 1: {player1} {player1Ready ? 'ready' : null}
+            </p>
+            <p>
+                Player 2: {player2} {player2Ready ? 'ready' : null}
+            </p>
+            <button onClick={handleLeaveRoom} disabled={game || !roomId ? true : false}>
+                Leave room
+            </button>
         </>
     );
 }

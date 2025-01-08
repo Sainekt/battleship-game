@@ -92,9 +92,9 @@ export const userStore = create((set, get) => ({
 
 export const gameState = create((set, get) => ({
     player1: null,
+    player2: null,
     player1Ready: false,
     player2Ready: false,
-    player2: null,
     boardPlayer1: null,
     boardPlayer2: null,
     winner: null,
@@ -111,8 +111,9 @@ export const gameState = create((set, get) => ({
     setRoomId: (id) => {
         set({ roomId: id });
     },
-    checkGame: (squares) => {
-        const destroyedShips = checkLife(get().boardPlayer1, squares);
+
+    checkGame: (squares, board) => {
+        const destroyedShips = checkLife(board, squares);
         if (destroyedShips.length === 10) {
             // to do winner
         }
