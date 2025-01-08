@@ -49,9 +49,15 @@ app.prepare().then(() => {
         });
 
         socket.on('updateState', (gameState) => {
-            console.log(gameState);
-
             socket.to(gameState.roomId).emit('loadState', gameState);
+        });
+
+        socket.on('sendState', (gameState) => {
+            console.log(gameState);
+            console.log(gameState.roomId);
+            console.log(io.of('/').adapter.rooms);
+            
+            socket.to(gameState.roomId).emit('sendState', gameState);
         });
 
         socket.on('leaveRoom', (username) => {

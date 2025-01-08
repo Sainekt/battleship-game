@@ -92,6 +92,8 @@ export const userStore = create((set, get) => ({
 
 export const gameState = create((set, get) => ({
     player1: null,
+    player1Ready: false,
+    player2Ready: false,
     player2: null,
     boardPlayer1: null,
     boardPlayer2: null,
@@ -102,6 +104,8 @@ export const gameState = create((set, get) => ({
     setGame: (bool) => set({ game: bool }),
     setPlayer1: (id) => set({ player1: id }),
     setPlayer2: (id) => set({ player2: id }),
+    setPlayer1Ready: (bool) => set({ player1Ready: bool }),
+    setPlayer2Ready: (bool) => set({ player2Ready: bool }),
     setBoardPlayer1: (board) => set({ boardPlayer1: board }),
     setBoardPlayer2: (board) => set({ boardPlayer2: board }),
     setRoomId: (id) => {

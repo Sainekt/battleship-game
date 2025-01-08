@@ -2,7 +2,6 @@
 import { useEffect } from 'react';
 import { io } from 'socket.io-client';
 import { gameState, userStore } from '../context/Context';
-import { UpdateSocketState } from '../../socket';
 
 const socket = io();
 
