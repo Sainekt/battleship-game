@@ -1,11 +1,10 @@
 'use client';
 import Square from './Square';
-import { useState } from 'react';
-import useStore from '../context/Context';
+import { useState, useEffect } from 'react';
 import { getStyle, markerMiss, validatePlace } from '../utils/utils';
-import { gameState, userStore } from '../context/Context';
-
-const CHAR_LIST = ['А', 'Б', 'В', 'Г', 'Д', 'Е', 'Ж', 'З', 'И', 'К'];
+import { gameState, userStore, useStore } from '../context/Context';
+import { socket } from './Room';
+import { CHAR_LIST } from '../utils/constants';
 
 function getBoard(squares, disabled = false, handleClick, start = false) {
     const rows = [];
@@ -47,10 +46,50 @@ export default function Board() {
         setDirection,
     } = useStore((state) => state);
     const [squares2, setSquares2] = useState(Array(100).fill(null));
-    const { checkGame, boardPlayer1, boardPlayer2, roomId } = gameState(
+    const { checkGame, boardPlayer1, boardPlayer2, roomId, game } = gameState(
         (state) => state
     );
     const { username } = userStore((state) => state);
+
+    useEffect(() => {
+        function handleShot(shot) {
+            let board;
+            if (!roomId) {
+                return;
+            }
+            if (squares[shot] === '•' || squares[shot] === 'X') {
+                return;
+            }
+            if (roomId === username) {
+                board = boardPlayer1;
+            } else {
+                board = boardPlayer2;
+            }
+            let marker = '•';
+            if (squares[shot]) {
+                marker = 'X';
+            }
+
+            const newValues = [...squares];
+
+            newValues[shot] = marker;
+            const destroyShips = checkGame(board, newValues);
+            if (destroyShips.length) {
+                const markerMissSquares = markerMiss(destroyShips);
+                for (const i of markerMissSquares) {
+                    if (!newValues[i]) {
+                        newValues[i] = '•';
+                    }
+                }
+            }
+            console.log(newValues);
+
+            setSquares(newValues);
+        }
+
+        socket.on('shot', handleShot);
+        return () => socket.off('shot', handleShot);
+    }, [boardPlayer1, boardPlayer2, squares]);
 
     function handleClickBorad1(event) {
         const index = +event.target.value;
@@ -88,31 +127,33 @@ export default function Board() {
         } else {
             board = boardPlayer1;
         }
-        if (!board) {
+        if (squares2[index] === '•' || squares2[index] === 'X') {
             return;
         }
         let marker = '•';
         if (board[index]) {
             marker = 'X';
         }
+        socket.emit('shot', index);
         setSquares2((values) => {
-            const nevValuse = [...values];
-            nevValuse[index] = marker;
-            const destroyShips = checkGame(nevValuse, board);
+            const newValues = [...values];
+            newValues[index] = marker;
+
+            const destroyShips = checkGame(board, newValues);
             if (destroyShips.length) {
                 const markerMissSquares = markerMiss(destroyShips);
                 for (const i of markerMissSquares) {
-                    if (!nevValuse[i]) {
-                        nevValuse[i] = '•';
+                    if (!newValues[i]) {
+                        newValues[i] = '•';
                     }
                 }
             }
-            return nevValuse;
+            return newValues;
         });
     }
 
     const board = getBoard(squares, false, handleClickBorad1);
-    const board2 = getBoard(squares2, !ready, handleClickBorad2);
+    const board2 = getBoard(squares2, !game, handleClickBorad2);
 
     return (
         <div className='board-container'>
