@@ -8,7 +8,7 @@ const fleet = [
     { id: 1, size: 1, quantity: 4, type: ['G', 'H', 'I', 'J'] },
 ];
 
-const useStore = create((set, get) => ({
+export const useStore = create((set, get) => ({
     gameStart: true,
     playersTurn: null,
     fleet1: [...fleet],
@@ -77,8 +77,6 @@ const useStore = create((set, get) => ({
     },
 }));
 
-export default useStore;
-
 export const userStore = create((set, get) => ({
     username: null,
     games: null,
@@ -112,7 +110,7 @@ export const gameState = create((set, get) => ({
         set({ roomId: id });
     },
 
-    checkGame: (squares, board) => {
+    checkGame: (board, squares) => {
         const destroyedShips = checkLife(board, squares);
         if (destroyedShips.length === 10) {
             // to do winner
