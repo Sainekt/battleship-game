@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { checkLife } from '../utils/utils';
+import { getValidLocalStorageBoard } from '../utils/validators';
 
 const fleet = [
     { id: 4, size: 4, quantity: 1, type: ['A'] },
@@ -8,16 +9,21 @@ const fleet = [
     { id: 1, size: 1, quantity: 4, type: ['G', 'H', 'I', 'J'] },
 ];
 
+const shipPlased = getValidLocalStorageBoard();
+
+const storageSquares = JSON.parse(localStorage.getItem('squares'));
+const storageFleet = JSON.parse(localStorage.getItem('fleet'));
+
 export const useStore = create((set, get) => ({
     gameStart: true,
     playersTurn: null,
-    fleet1: [...fleet],
+    fleet1: storageFleet ? [...storageFleet] : [...fleet],
     fleet2: [...fleet],
-    squares: Array(100).fill(null),
+    squares: storageSquares ? storageSquares : Array(100).fill(null),
     ship: null,
     direction: null,
     ready: false,
-    allShipPlaced: false,
+    allShipPlaced: shipPlased,
 
     checkAllShipPlaced: (fleet = get().fleet1) => {
         const count = fleet.reduce((accum, current) => {
@@ -68,6 +74,7 @@ export const useStore = create((set, get) => ({
                 get().checkAllShipPlaced(updatedFleet);
             }
             set({ fleet1: updatedFleet });
+            localStorage.setItem('fleet', JSON.stringify(updatedFleet));
             return true;
         }
         return false;

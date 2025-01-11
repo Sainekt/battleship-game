@@ -70,6 +70,8 @@ export default function Panel() {
         setDirection(null);
         reset();
         checkAllShipPlaced();
+        localStorage.removeItem('squares')
+        localStorage.removeItem('fleet')
     }
 
     function handleReady() {

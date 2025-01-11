@@ -114,6 +114,7 @@ export default function Board() {
             const newValues = [...squares];
             newValues[index] = value;
             setSquares(newValues);
+            localStorage.setItem('squares', JSON.stringify(newValues))
         }
     }
     function handleClickBorad2(event) {

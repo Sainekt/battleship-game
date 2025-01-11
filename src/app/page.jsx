@@ -1,6 +1,7 @@
 import Borad from './components/Board';
 import Panel from './components/Panel';
 import NavBar from './components/Navbar';
+import Timer from './components/Timer'
 import Createroom from './components/Room';
 import './globals.css';
 
@@ -14,6 +15,7 @@ export default function Home() {
                     <Createroom></Createroom>
                 </div>
                 <div className='item'>
+                    <Timer></Timer>
                     <Borad></Borad>
                 </div>
             </div>
