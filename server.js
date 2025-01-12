@@ -58,6 +58,7 @@ app.prepare().then(() => {
             socket.to(gameState.roomId).emit('sendState', gameState);
         });
 
+
         socket.on('leaveRoom', (username) => {
             console.log(`User left room: ${username}`);
             console.log(socket.roomId);

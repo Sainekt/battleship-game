@@ -9,10 +9,8 @@ const fleet = [
     { id: 1, size: 1, quantity: 4, type: ['G', 'H', 'I', 'J'] },
 ];
 
-const shipPlased = getValidLocalStorageBoard();
-
-const storageSquares = JSON.parse(localStorage.getItem('squares'));
-const storageFleet = JSON.parse(localStorage.getItem('fleet'));
+const { shipPlased, storageSquares, storageFleet } =
+    getValidLocalStorageBoard();
 
 export const useStore = create((set, get) => ({
     gameStart: true,
@@ -47,7 +45,7 @@ export const useStore = create((set, get) => ({
             ship: id,
         })),
 
-    sizeDecrement: () => {
+    sizeDecrement: (newValues) => {
         const fleet = get().fleet1;
         const ship = get().ship;
         const shipObjIndex = fleet.findIndex((shipObj) => shipObj.id === +ship);
@@ -65,16 +63,18 @@ export const useStore = create((set, get) => ({
                 shipObj.quantity--;
                 shipObj.size = shipObj.quantity ? shipObj.id : 0;
             }
-
             updatedFleet[shipObjIndex] = {
                 ...shipObj,
             };
+
             if (!shipObj.size && !shipObj.quantity > 0) {
                 set({ fleet1: updatedFleet, ship: null, direction: null });
                 get().checkAllShipPlaced(updatedFleet);
+                localStorage.setItem('squares', JSON.stringify(newValues));
+                localStorage.setItem('fleet', JSON.stringify(updatedFleet));
             }
             set({ fleet1: updatedFleet });
-            localStorage.setItem('fleet', JSON.stringify(updatedFleet));
+            set({ squares: newValues });
             return true;
         }
         return false;

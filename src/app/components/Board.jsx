@@ -1,7 +1,8 @@
 'use client';
 import Square from './Square';
 import { useState, useEffect } from 'react';
-import { getStyle, markerMiss, validatePlace } from '../utils/utils';
+import { getStyle, markerMiss } from '../utils/utils';
+import { validatePlace } from '../utils/validators';
 import { gameState, userStore, useStore } from '../context/Context';
 import { socket } from './Room';
 import { CHAR_LIST } from '../utils/constants';
@@ -82,7 +83,6 @@ export default function Board() {
                     }
                 }
             }
-            console.log(newValues);
 
             setSquares(newValues);
         }
@@ -108,13 +108,11 @@ export default function Board() {
                 squares,
                 direction,
                 setDirection
-            ) &&
-            sizeDecrement()
+            )
         ) {
             const newValues = [...squares];
             newValues[index] = value;
-            setSquares(newValues);
-            localStorage.setItem('squares', JSON.stringify(newValues))
+            sizeDecrement(newValues);
         }
     }
     function handleClickBorad2(event) {

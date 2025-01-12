@@ -41,12 +41,6 @@ export default function useSendGameState() {
         if (roomId) {
             socket.emit('sendState', state);
             socket.on('sendState', (state) => {
-                if (
-                    state.player1Ready === true &&
-                    state.player2Ready === true
-                ) {
-                    setGame(true);
-                }
                 if (username === roomId) {
                     setPlayer2Ready(state.player2Ready);
                     setBoardPlayer2(state.boardPlayer2);
