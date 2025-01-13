@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { gameState } from '../context/Context';
-import { userStore } from '../context/Context';
+import { gameState, userStore, useStore } from '../context/Context';
 import { socket } from '../components/Room';
 
 export default function useSendGameState() {
@@ -23,6 +22,7 @@ export default function useSendGameState() {
         setGame,
     } = gameState((state) => state);
     const { username } = userStore((state) => state);
+    const { ready, setReady } = useStore((state) => state);
 
     const state = {
         roomId,
@@ -50,11 +50,23 @@ export default function useSendGameState() {
                 }
             });
         }
-        const handleReceiveState = (newState) => {
-            console.log(newState);
-        };
         return () => {
-            socket.off('sendState', handleReceiveState);
+            socket.removeAllListeners('sendState');
         };
     }, [roomId, player1Ready, player2Ready, winner, game]);
+
+    useEffect(() => {
+        function checkStart(check) {
+            if (ready && check) {
+                setGame(true);
+            } else {
+                setGame(false);
+            }
+        }
+        socket.on('checkStart', checkStart);
+
+        return () => {
+            socket.off('checkStart', checkStart);
+        };
+    }, [ready]);
 }

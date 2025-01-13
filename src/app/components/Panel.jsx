@@ -18,6 +18,7 @@ export default function Panel() {
         checkAllShipPlaced,
         gameStart,
         squares,
+        time,
     } = useStore((state) => state);
     const {
         setBoardPlayer1,
@@ -70,8 +71,8 @@ export default function Panel() {
         setDirection(null);
         reset();
         checkAllShipPlaced();
-        localStorage.removeItem('squares')
-        localStorage.removeItem('fleet')
+        localStorage.removeItem('squares');
+        localStorage.removeItem('fleet');
     }
 
     function handleReady() {

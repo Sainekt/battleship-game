@@ -22,6 +22,11 @@ export const useStore = create((set, get) => ({
     direction: null,
     ready: false,
     allShipPlaced: shipPlased,
+    time: 0,
+
+    setTime: (time) => {
+        set({ time: time });
+    },
 
     checkAllShipPlaced: (fleet = get().fleet1) => {
         const count = fleet.reduce((accum, current) => {
