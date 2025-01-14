@@ -60,6 +60,11 @@ app.prepare().then(() => {
         socket.on('checkStart', (status) => {
             io.to(socket.roomId).emit('checkStart', status);
         });
+        socket.on('setMotion', (users) => {
+            const player = users[Math.floor(Math.random() * users.length)];
+            io.to(socket.roomId).emit('setMotion', player);
+        });
+
         socket.on('leaveRoom', (username) => {
             console.log(`User left room: ${username}`);
             console.log(socket.roomId);
