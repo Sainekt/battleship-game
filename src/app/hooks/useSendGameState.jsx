@@ -20,6 +20,8 @@ export default function useSendGameState() {
         setBoardPlayer2,
         game,
         setGame,
+        motion,
+        setMotion,
     } = gameState((state) => state);
     const { username } = userStore((state) => state);
     const { ready, setReady } = useStore((state) => state);
@@ -35,25 +37,36 @@ export default function useSendGameState() {
         boardPlayer2,
         username,
         game,
+        motion,
     };
 
+    function getUserMotion() {
+        const players = [player1, player2];
+        return players[Math.floor(Math.random() * players.length)];
+    }
     useEffect(() => {
+        function handleReceivingState(state) {
+            if (username === roomId) {
+                setPlayer2Ready(state.player2Ready);
+                setBoardPlayer2(state.boardPlayer2);
+                if (!motion && game) {
+                    setMotion(getUserMotion());
+                }
+            } else {
+                setPlayer1Ready(state.player1Ready);
+                setBoardPlayer1(state.boardPlayer1);
+                setMotion(state.motion);
+            }
+        }
+
         if (roomId) {
             socket.emit('sendState', state);
-            socket.on('sendState', (state) => {
-                if (username === roomId) {
-                    setPlayer2Ready(state.player2Ready);
-                    setBoardPlayer2(state.boardPlayer2);
-                } else {
-                    setPlayer1Ready(state.player1Ready);
-                    setBoardPlayer1(state.boardPlayer1);
-                }
-            });
+            socket.on('sendState', handleReceivingState);
         }
         return () => {
-            socket.removeAllListeners('sendState');
+            socket.off('sendState', handleReceivingState);
         };
-    }, [roomId, player1Ready, player2Ready, winner, game]);
+    }, [roomId, player1Ready, player2Ready, winner, game, motion]);
 
     useEffect(() => {
         function checkStart(check) {

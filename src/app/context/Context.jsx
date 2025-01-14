@@ -110,7 +110,8 @@ export const gameState = create((set, get) => ({
     winner: null,
     roomId: null,
     game: false,
-
+    motion: null,
+    setMotion: (user) => set({ motion: user }),
     setGame: (bool) => set({ game: bool }),
     setPlayer1: (id) => set({ player1: id }),
     setPlayer2: (id) => set({ player2: id }),

@@ -1,13 +1,21 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { gameState, useStore, userStore } from '../context/Context';
 import { socket } from './Room';
 
 export default function Timer() {
     const { time, setTime } = useStore((state) => state);
-    const { player1Ready, player2Ready, game, roomId } = gameState(
-        (state) => state
-    );
+    const [text, setText] = useState(null);
+    const {
+        player1Ready,
+        player2Ready,
+        game,
+        roomId,
+        motion,
+        setMotion,
+        player1,
+        player2,
+    } = gameState((state) => state);
     const { username } = userStore((state) => state);
 
     const timOutId = useRef(null);
@@ -17,7 +25,8 @@ export default function Timer() {
             return;
         }
         if (player1Ready && player2Ready && time === null) {
-            setTime(5);
+            setTime(1);
+            setText('The game will start in: ');
         }
 
         if (time > 0) {
@@ -42,8 +51,32 @@ export default function Timer() {
 
     const handleStartGame = () => {
         clearTimeout(timOutId.current);
+        setTime(0);
         socket.emit('checkStart', true);
     };
 
-    return <h1>{time && !game ? 'The game will start in: ' + time : null}</h1>;
+    // move timer
+    useEffect(() => {
+        if (!game) return;
+        setText(`Player's turn: ${motion}`);
+        if (!time) {
+            setTime(15);
+        }
+        timOutId.current = setTimeout(() => {
+            console.log(time);
+            setTime(time - 1);
+            if (time - 1 === 0) {
+                setMotion(player1 === motion ? player2 : player1);
+            }
+        }, 1000);
+
+        return () => clearTimeout(timOutId.current);
+    }, [motion, time]);
+
+    return (
+        <h3>
+            {time && !game ? `${text} ${time}` : null}
+            {time && game ? `${text} ${time}` : null}
+        </h3>
+    );
 }
