@@ -11,3 +11,5 @@ export const CHAR_LIST: Array<string> = [
     'И',
     'К',
 ];
+export const TIME_FOR_START: number = 2;
+export const TIME_FOR_MOTION: number = 15;

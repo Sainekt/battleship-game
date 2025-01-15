@@ -6,6 +6,7 @@ import { validatePlace } from '../utils/validators';
 import { gameState, userStore, useStore } from '../context/Context';
 import { socket } from './Room';
 import { CHAR_LIST } from '../utils/constants';
+import { TIME_FOR_MOTION } from '../utils/constants';
 
 function getBoard(squares, disabled = false, handleClick, start = false) {
     const rows = [];
@@ -47,9 +48,8 @@ export default function Board() {
         setDirection,
     } = useStore((state) => state);
     const [squares2, setSquares2] = useState(Array(100).fill(null));
-    const { checkGame, boardPlayer1, boardPlayer2, roomId, game } = gameState(
-        (state) => state
-    );
+    const { checkGame, boardPlayer1, boardPlayer2, roomId, game, motion } =
+        gameState((state) => state);
     const { username } = userStore((state) => state);
 
     useEffect(() => {
@@ -126,13 +126,15 @@ export default function Board() {
         } else {
             board = boardPlayer1;
         }
-        if (squares2[index] === '•' || squares2[index] === 'X') {
-            return;
+        if (!board[index]) {
+            socket.emit('changeMotion', username);
         }
         let marker = '•';
         if (board[index]) {
             marker = 'X';
         }
+        console.log(board[index]);
+
         socket.emit('shot', index);
         setSquares2((values) => {
             const newValues = [...values];

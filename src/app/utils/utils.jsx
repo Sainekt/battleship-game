@@ -54,7 +54,6 @@ export function markerMiss(array) {
         }
     }
     const result = new Set(allCoord);
-    console.log(result);
 
     return result;
 }

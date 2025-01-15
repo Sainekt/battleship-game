@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { gameState, userStore, useStore } from '../context/Context';
 import { socket } from '../components/Room';
+import { TIME_FOR_MOTION } from '../utils/constants';
 
 export default function useSendGameState() {
     const {
@@ -56,8 +57,18 @@ export default function useSendGameState() {
         function handleSetMotion(user) {
             if (!motion) {
                 setMotion(user);
-                setTimer(15);
             }
+        }
+        function handeSetTimer(time) {
+            setTimer(time);
+        }
+        function handleChangeMotion(motion) {
+            if (motion === player1) {
+                setMotion(player2);
+            } else {
+                setMotion(player1);
+            }
+            socket.emit('setTimer', TIME_FOR_MOTION);
         }
 
         if (roomId) {
@@ -67,12 +78,16 @@ export default function useSendGameState() {
         if (game) {
             socket.on('setMotion', handleSetMotion);
         }
+        socket.on('setTimer', handeSetTimer);
+        socket.on('changeMotion', handleChangeMotion);
 
         return () => {
+            socket.off('changeMotion', handleChangeMotion);
+            socket.off('setTimer', handeSetTimer);
             socket.off('sendState', handleReceivingState);
             socket.off('setMotion', handleSetMotion);
         };
-    }, [roomId, player1Ready, player2Ready, winner, game, motion, timer]);
+    }, [roomId, player1Ready, player2Ready, winner, game, motion]);
 
     useEffect(() => {
         function checkStart(check) {
