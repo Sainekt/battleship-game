@@ -48,33 +48,34 @@ export default function Board() {
         setDirection,
     } = useStore((state) => state);
     const [squares2, setSquares2] = useState(Array(100).fill(null));
-    const { checkGame, boardPlayer1, boardPlayer2, roomId, game, motion } =
-        gameState((state) => state);
+    const {
+        checkGame,
+        myBoard,
+        enemyBoard,
+        roomId,
+        game,
+        motion,
+        setEnemyBoard,
+    } = gameState((state) => state);
     const { username } = userStore((state) => state);
 
     useEffect(() => {
+        // update board 1 if enemy do shot
         function handleShot(shot) {
-            let board;
             if (!roomId) {
                 return;
             }
-            if (squares[shot] === '•' || squares[shot] === 'X') {
+            if (squares[shot] === 'X' || squares[shot] === '•') {
                 return;
-            }
-            if (roomId === username) {
-                board = boardPlayer1;
-            } else {
-                board = boardPlayer2;
             }
             let marker = '•';
             if (squares[shot]) {
                 marker = 'X';
             }
-
+            socket.emit('hitOrMiss', [shot, squares[shot]]);
             const newValues = [...squares];
-
             newValues[shot] = marker;
-            const destroyShips = checkGame(board, newValues);
+            const destroyShips = checkGame(myBoard, newValues);
             if (destroyShips.length) {
                 const markerMissSquares = markerMiss(destroyShips);
                 for (const i of markerMissSquares) {
@@ -89,7 +90,39 @@ export default function Board() {
 
         socket.on('shot', handleShot);
         return () => socket.off('shot', handleShot);
-    }, [boardPlayer1, boardPlayer2, squares]);
+    }, [squares, myBoard]);
+
+    useEffect(() => {
+        // update board 2 if player do shot
+        function handleHitOrMiss([index, hit]) {
+            let marker = '•';
+            let newEnemyBoard = [...enemyBoard];
+            if (hit) {
+                marker = 'X';
+                newEnemyBoard[index] = hit;
+                setEnemyBoard(newEnemyBoard);
+            }
+            setSquares2((values) => {
+                const newValues = [...values];
+                newValues[index] = marker;
+
+                const destroyShips = checkGame(newEnemyBoard, newValues);
+                if (destroyShips.length) {
+                    const markerMissSquares = markerMiss(destroyShips);
+                    for (const i of markerMissSquares) {
+                        if (!newValues[i]) {
+                            newValues[i] = '•';
+                        }
+                    }
+                }
+                return newValues;
+            });
+        }
+        socket.on('hitOrMiss', handleHitOrMiss);
+        return () => {
+            socket.off('hitOrMiss', handleHitOrMiss);
+        };
+    }, [squares2, enemyBoard]);
 
     function handleClickBorad1(event) {
         const index = +event.target.value;
@@ -117,40 +150,15 @@ export default function Board() {
     }
     function handleClickBorad2(event) {
         const index = +event.target.value;
-        let board;
-        if (!roomId) {
+        if (
+            !roomId ||
+            isNaN(index) ||
+            squares2[index] === 'X' ||
+            squares2[index] === '•'
+        ) {
             return;
         }
-        if (roomId === username) {
-            board = boardPlayer2;
-        } else {
-            board = boardPlayer1;
-        }
-        if (!board[index]) {
-            socket.emit('changeMotion', username);
-        }
-        let marker = '•';
-        if (board[index]) {
-            marker = 'X';
-        }
-        console.log(board[index]);
-
         socket.emit('shot', index);
-        setSquares2((values) => {
-            const newValues = [...values];
-            newValues[index] = marker;
-
-            const destroyShips = checkGame(board, newValues);
-            if (destroyShips.length) {
-                const markerMissSquares = markerMiss(destroyShips);
-                for (const i of markerMissSquares) {
-                    if (!newValues[i]) {
-                        newValues[i] = '•';
-                    }
-                }
-            }
-            return newValues;
-        });
     }
 
     const board = getBoard(squares, false, handleClickBorad1);

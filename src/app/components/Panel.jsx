@@ -21,11 +21,11 @@ export default function Panel() {
         time,
     } = useStore((state) => state);
     const {
-        setBoardPlayer1,
+        setMyBoard,
         setPlayer1Ready,
         setPlayer2Ready,
         roomId,
-        setBoardPlayer2,
+        setEnemyBoard,
         player1Ready,
         game,
         player2,
@@ -79,12 +79,11 @@ export default function Panel() {
         if (allShipPlaced && roomId && player2) {
             setReady();
             if (username == roomId) {
-                setBoardPlayer1(squares);
                 setPlayer1Ready(!ready);
             } else {
                 setPlayer2Ready(!ready);
-                setBoardPlayer2(squares);
             }
+            setMyBoard(squares)
         }
     }
     return (

@@ -49,6 +49,9 @@ app.prepare().then(() => {
         socket.on('shot', (shot) => {
             socket.to(socket.roomId).emit('shot', shot);
         });
+        socket.on('hitOrMiss', (shot) => {
+            socket.to(socket.roomId).emit('hitOrMiss', shot);
+        });
 
         socket.on('updateState', (gameState) => {
             socket.to(gameState.roomId).emit('loadState', gameState);

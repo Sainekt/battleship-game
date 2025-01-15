@@ -28,6 +28,8 @@ function getShipCoord(arr) {
 export function checkLife(ships, board) {
     const shipsCoord = getShipCoord(ships);
     const boardCoord = getShipCoord(board);
+    console.log(shipsCoord);
+
     const shot = boardCoord.X;
     const result = [];
     if (shot) {

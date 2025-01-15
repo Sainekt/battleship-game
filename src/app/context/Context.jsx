@@ -100,8 +100,8 @@ export const gameState = create((set, get) => ({
     player2: null,
     player1Ready: false,
     player2Ready: false,
-    boardPlayer1: null,
-    boardPlayer2: null,
+    myBoard: null,
+    enemyBoard: Array(100).fill(null),
     winner: null,
     roomId: null,
     game: false,
@@ -114,8 +114,8 @@ export const gameState = create((set, get) => ({
     setPlayer2: (id) => set({ player2: id }),
     setPlayer1Ready: (bool) => set({ player1Ready: bool }),
     setPlayer2Ready: (bool) => set({ player2Ready: bool }),
-    setBoardPlayer1: (board) => set({ boardPlayer1: board }),
-    setBoardPlayer2: (board) => set({ boardPlayer2: board }),
+    setMyBoard: (board) => set({ myBoard: board }),
+    setEnemyBoard: (board) => set({ enemyBoard: board }),
     setRoomId: (id) => {
         set({ roomId: id });
     },

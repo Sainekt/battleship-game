@@ -17,8 +17,8 @@ export default function useSendGameState() {
         boardPlayer2,
         setPlayer1Ready,
         setPlayer2Ready,
-        setBoardPlayer1,
-        setBoardPlayer2,
+        setMyBoard,
+        setEnemyBoard,
         game,
         setGame,
         motion,
@@ -47,10 +47,8 @@ export default function useSendGameState() {
         function handleReceivingState(state) {
             if (username === roomId) {
                 setPlayer2Ready(state.player2Ready);
-                setBoardPlayer2(state.boardPlayer2);
             } else {
                 setPlayer1Ready(state.player1Ready);
-                setBoardPlayer1(state.boardPlayer1);
             }
         }
 
