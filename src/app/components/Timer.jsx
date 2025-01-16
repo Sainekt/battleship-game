@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { gameState, useStore, userStore } from '../context/Context';
 import { socket } from './Room';
 import { TIME_FOR_START, TIME_FOR_MOTION } from '../utils/constants';
@@ -12,27 +12,28 @@ export default function Timer() {
         game,
         roomId,
         motion,
-        setMotion,
-        player1,
-        player2,
         timer,
         setTimer,
+        setMove,
+        winner,
     } = gameState((state) => state);
     const { username } = userStore((state) => state);
-
-    const timeOutRef = useRef(null);
+    const timeOutStart = useRef(null);
+    const timeOutGame = useRef(null);
 
     useEffect(() => {
         if (game) {
+            clearTimeout(timeOutStart.current);
             return;
         }
+
         if (player1Ready && player2Ready && timer === 0) {
             setTimer(TIME_FOR_START);
             setText('The game will start in: ');
         }
 
         if (timer > 0) {
-            timeOutRef.current = setTimeout(() => {
+            timeOutStart.current = setTimeout(() => {
                 setTimer(timer - 1);
                 if (timer - 1 === 0) {
                     handleStartGame();
@@ -42,47 +43,63 @@ export default function Timer() {
 
         if (!player1Ready || !player2Ready) {
             setTimer(0);
-            clearTimeout(timeOutRef.current);
+            clearTimeout(timeOutStart.current);
             socket.emit('checkStart', false);
         }
 
         function handleStartGame() {
-            clearTimeout(timeOutRef.current);
+            clearTimeout(timeOutStart.current);
             socket.emit('checkStart', true);
         }
 
         return () => {
-            clearTimeout(timeOutRef.current);
+            clearTimeout(timeOutStart.current);
         };
-    }, [player1Ready, player2Ready, game, timer]);
+    }, [player1Ready, player2Ready, game, timer, motion]);
 
     // move timer
     useEffect(() => {
-        if (!game) return;
-        username === motion
+        if (!game || !motion || winner) {
+            clearTimeout(timeOutGame.current);
+            return;
+        }
+        console.log(motion);
+        console.log(timer);
+
+        username === motion && timer > 0
             ? setText(`Yours move: `)
             : setText(`Player's turn: ${motion}`);
-        if (timer) {
-            timeOutRef.current = setTimeout(() => {
-                setTimer(timer - 1);
-                if (timer - 1 === 0) {
-                    if (username === roomId) {
-                        setTimeout(() => {
-                            socket.emit('changeMotion', motion);
-                        }, 2000);
-                    }
-                }
-            }, 1000);
+        if (timer <= 0) {
+            setText('turn change...');
         }
 
-        return () => clearTimeout(timeOutRef.current);
-    }, [motion, timer]);
+        timeOutGame.current = setTimeout(() => {
+            setTimer(timer - 1);
+            if (!timer) {
+                setMove(false);
+                if (username === roomId) {
+                    setTimeout(() => {
+                        socket.emit('changeMotion', motion);
+                    }, 2000);
+                }
+            }
+        }, 1000);
 
-    return (
-        <h3>
-            {timer && !game ? `${text} ${timer}` : null}
-            {timer && game ? `${text} ${timer}` : null}
-            {!timer && game ? 'turn change...' : null}
-        </h3>
-    );
+        return () => {
+            clearTimeout(timeOutGame.current);
+        };
+    }, [motion, timer, game, winner]);
+
+    function getText() {
+        if (timer > 0 && !game) {
+            return `${text} ${timer}`;
+        } else if (timer > 0 && game) {
+            return `${text} ${timer}`;
+        } else if (timer <= 0 && game) {
+            return text;
+        }
+        return null;
+    }
+
+    return <h3>{getText()}</h3>;
 }

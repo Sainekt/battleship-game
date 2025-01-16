@@ -17,14 +17,14 @@ export default function useSendGameState() {
         boardPlayer2,
         setPlayer1Ready,
         setPlayer2Ready,
-        setMyBoard,
-        setEnemyBoard,
         game,
         setGame,
         motion,
         setMotion,
         setTimer,
         timer,
+        move,
+        setMove,
     } = gameState((state) => state);
     const { username } = userStore((state) => state);
     const { ready, setReady } = useStore((state) => state);
@@ -59,6 +59,11 @@ export default function useSendGameState() {
         }
         function handeSetTimer(time) {
             setTimer(time);
+            if (username === motion) {
+                setMove(true);
+            } else {
+                setMove(false);
+            }
         }
         function handleChangeMotion(motion) {
             if (motion === player1) {
@@ -91,6 +96,7 @@ export default function useSendGameState() {
         function checkStart(check) {
             if (ready && check) {
                 setGame(true);
+                setTimer(0);
                 if (username === roomId) {
                     socket.emit('setMotion', [player1, player2]);
                 }

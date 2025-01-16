@@ -56,6 +56,8 @@ export default function Board() {
         game,
         motion,
         setEnemyBoard,
+        move,
+        setMove,
     } = gameState((state) => state);
     const { username } = userStore((state) => state);
 
@@ -71,6 +73,10 @@ export default function Board() {
             let marker = '•';
             if (squares[shot]) {
                 marker = 'X';
+                socket.emit('setTimer', TIME_FOR_MOTION);
+            }
+            if (marker === '•') {
+                socket.emit('changeMotion', motion);
             }
             socket.emit('hitOrMiss', [shot, squares[shot]]);
             const newValues = [...squares];
@@ -90,7 +96,7 @@ export default function Board() {
 
         socket.on('shot', handleShot);
         return () => socket.off('shot', handleShot);
-    }, [squares, myBoard]);
+    }, [squares, myBoard, motion]);
 
     useEffect(() => {
         // update board 2 if player do shot
@@ -101,6 +107,7 @@ export default function Board() {
                 marker = 'X';
                 newEnemyBoard[index] = hit;
                 setEnemyBoard(newEnemyBoard);
+                setMove(true);
             }
             setSquares2((values) => {
                 const newValues = [...values];
@@ -158,6 +165,10 @@ export default function Board() {
         ) {
             return;
         }
+        if (!move) {
+            return;
+        }
+        setMove(false);
         socket.emit('shot', index);
     }
 

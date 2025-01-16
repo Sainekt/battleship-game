@@ -1,5 +1,7 @@
 // return class style for square
 import { validCoord } from './validators';
+import { fleetCount } from '../utils/constants';
+
 export function getStyle(start = false, disabled = false, ship = false) {
     if (disabled) {
         return 'square-disabled square';
@@ -10,6 +12,7 @@ export function getStyle(start = false, disabled = false, ship = false) {
 
     return 'square';
 }
+
 // return obj ships coordinate -> ship : [1,2,3,4]
 function getShipCoord(arr) {
     const result = arr.reduce((acc, curr, i) => {
@@ -28,12 +31,14 @@ function getShipCoord(arr) {
 export function checkLife(ships, board) {
     const shipsCoord = getShipCoord(ships);
     const boardCoord = getShipCoord(board);
-    console.log(shipsCoord);
 
     const shot = boardCoord.X;
     const result = [];
     if (shot) {
         for (const key in shipsCoord) {
+            if (shipsCoord[key].length !== fleetCount[key]) {
+                continue;
+            }
             const shotSet = new Set(shot);
             const allHit = shipsCoord[key].every((coord) => shotSet.has(coord));
             if (allHit) {

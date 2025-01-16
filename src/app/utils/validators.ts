@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { decodeToken } from '../security/token';
 import { JWTPayload } from 'jose';
+import { fleetCount } from './constants';
 
 // board coord for left and right line
 export const validCoord = {
@@ -76,20 +77,6 @@ export async function validateJson(request: Request): Promise<SignUpData> {
 }
 
 export function getValidLocalStorageBoard() {
-    const fleetCount = {
-        A: 4,
-        B: 3,
-        C: 3,
-        D: 2,
-        E: 2,
-        F: 2,
-        G: 1,
-        H: 1,
-        I: 1,
-        J: 1,
-        X: 20,
-        '•': 79,
-    };
     interface ResultObj {
         shipPlased: boolean;
         storageSquares: Array<string>;
