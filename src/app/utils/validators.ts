@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { decodeToken } from '../security/token';
 import { JWTPayload } from 'jose';
-import { fleetCount } from './constants';
+import { FLEET_COUNT } from './constants';
 
 // board coord for left and right line
 export const validCoord = {
@@ -99,20 +99,20 @@ export function getValidLocalStorageBoard() {
             if (!curr) {
                 return acc;
             }
-            if (!(curr in fleetCount)) {
+            if (!(curr in FLEET_COUNT)) {
                 throw new Error('Invalid local storage: not exists ship type');
             }
 
             acc[curr] ? acc[curr]++ : (acc[curr] = 1);
-            if (acc[curr] > fleetCount[curr]) {
-                throw new Error('Invalid local storage: too many sheeps');
+            if (acc[curr] > FLEET_COUNT[curr]) {
+                throw new Error('Invalid local storage: too many ships');
             }
             return acc;
         }, {});
         let shipPlasedCount = 0;
         for (const squares in countShips) {
-            if (fleetCount[squares] === countShips[squares]) {
-                shipPlasedCount += fleetCount[squares];
+            if (FLEET_COUNT[squares] === countShips[squares]) {
+                shipPlasedCount += FLEET_COUNT[squares];
             }
         }
         result.shipPlased = shipPlasedCount === 20;

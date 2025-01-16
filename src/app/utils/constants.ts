@@ -13,7 +13,7 @@ export const CHAR_LIST: Array<string> = [
 ];
 export const TIME_FOR_START: number = 2;
 export const TIME_FOR_MOTION: number = 15;
-export const fleetCount = {
+export const FLEET_COUNT = {
     A: 4,
     B: 3,
     C: 3,
@@ -27,3 +27,9 @@ export const fleetCount = {
     X: 20,
     '•': 80,
 };
+export const FLEET = [
+    { id: 4, size: 4, quantity: 1, type: ['A'] },
+    { id: 3, size: 3, quantity: 2, type: ['B', 'C'] },
+    { id: 2, size: 2, quantity: 3, type: ['D', 'E', 'F'] },
+    { id: 1, size: 1, quantity: 4, type: ['G', 'H', 'I', 'J'] },
+];

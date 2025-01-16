@@ -2,13 +2,7 @@ import { create } from 'zustand';
 import { checkLife } from '../utils/utils';
 import { getValidLocalStorageBoard } from '../utils/validators';
 import { socket } from '../components/Room';
-
-const fleet = [
-    { id: 4, size: 4, quantity: 1, type: ['A'] },
-    { id: 3, size: 3, quantity: 2, type: ['B', 'C'] },
-    { id: 2, size: 2, quantity: 3, type: ['D', 'E', 'F'] },
-    { id: 1, size: 1, quantity: 4, type: ['G', 'H', 'I', 'J'] },
-];
+import { FLEET } from '../utils/constants';
 
 const { shipPlased, storageSquares, storageFleet } =
     getValidLocalStorageBoard();
@@ -16,8 +10,8 @@ const { shipPlased, storageSquares, storageFleet } =
 export const useStore = create((set, get) => ({
     gameStart: true,
     playersTurn: null,
-    fleet1: storageFleet ? [...storageFleet] : [...fleet],
-    fleet2: [...fleet],
+    fleet1: storageFleet ? [...storageFleet] : [...FLEET],
+    fleet2: [...FLEET],
     squares: storageSquares ? storageSquares : Array(100).fill(null),
     ship: null,
     direction: null,
@@ -81,7 +75,7 @@ export const useStore = create((set, get) => ({
         return false;
     },
     reset: () => {
-        set({ ship: null, fleet1: [...fleet] });
+        set({ ship: null, fleet1: [...FLEET] });
     },
 }));
 

@@ -1,4 +1,4 @@
-import Borad from './components/Board';
+import Board from './components/Board';
 import Panel from './components/Panel';
 import NavBar from './components/Navbar';
 import Timer from './components/Timer'
@@ -16,7 +16,7 @@ export default function Home() {
                 </div>
                 <div className='item'>
                     <Timer></Timer>
-                    <Borad></Borad>
+                    <Board></Board>
                 </div>
             </div>
         </>

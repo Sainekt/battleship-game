@@ -1,6 +1,6 @@
 // return class style for square
 import { validCoord } from './validators';
-import { fleetCount } from '../utils/constants';
+import { FLEET_COUNT } from '../utils/constants';
 
 export function getStyle(start = false, disabled = false, ship = false) {
     if (disabled) {
@@ -36,7 +36,7 @@ export function checkLife(ships, board) {
     const result = [];
     if (shot) {
         for (const key in shipsCoord) {
-            if (shipsCoord[key].length !== fleetCount[key]) {
+            if (shipsCoord[key].length !== FLEET_COUNT[key]) {
                 continue;
             }
             const shotSet = new Set(shot);

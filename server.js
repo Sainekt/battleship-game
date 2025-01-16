@@ -3,9 +3,9 @@ import next from 'next';
 import { Server } from 'socket.io';
 
 const dev = process.env.NODE_ENV !== 'production';
-const hostname = 'localhost';
-const port = 3000;
-const app = next({ dev, hostname, port });
+const HOSTNAME = '0.0.0.0';
+const PORT = 3000;
+const app = next({ dev, HOSTNAME, PORT });
 const handler = app.getRequestHandler();
 
 app.prepare().then(() => {
@@ -101,7 +101,7 @@ app.prepare().then(() => {
             console.error(err);
             process.exit(1);
         })
-        .listen(port, () => {
-            console.log(`> Ready on http://${hostname}:${port}`);
+        .listen(PORT, () => {
+            console.log(`> Ready on http://${HOSTNAME}:${PORT}`);
         });
 });
