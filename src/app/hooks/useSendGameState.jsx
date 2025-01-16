@@ -25,6 +25,7 @@ export default function useSendGameState() {
         timer,
         move,
         setMove,
+        setWinner,
     } = gameState((state) => state);
     const { username } = userStore((state) => state);
     const { ready, setReady } = useStore((state) => state);
@@ -36,6 +37,7 @@ export default function useSendGameState() {
         player1,
         player2,
         winner,
+        setWinner,
         boardPlayer1,
         boardPlayer2,
         username,
@@ -50,6 +52,12 @@ export default function useSendGameState() {
             } else {
                 setPlayer1Ready(state.player1Ready);
             }
+        }
+        function handleSetWinner(winner) {
+            setWinner(winner);
+            setMotion(null);
+            setTimer(0);
+            setGame(false);
         }
 
         function handleSetMotion(user) {
@@ -83,8 +91,10 @@ export default function useSendGameState() {
         }
         socket.on('setTimer', handeSetTimer);
         socket.on('changeMotion', handleChangeMotion);
+        socket.on('setWinner', handleSetWinner);
 
         return () => {
+            socket.off('setWinner', handleChangeMotion);
             socket.off('changeMotion', handleChangeMotion);
             socket.off('setTimer', handeSetTimer);
             socket.off('sendState', handleReceivingState);

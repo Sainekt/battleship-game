@@ -74,6 +74,10 @@ app.prepare().then(() => {
             io.to(socket.roomId).emit('changeMotion', motion);
         });
 
+        socket.on('setWinner', (winner) => {
+            io.to(socket.roomId).emit('setWinner', winner);
+        });
+
         socket.on('leaveRoom', (username) => {
             console.log(`User left room: ${username}`);
             console.log(socket.roomId);

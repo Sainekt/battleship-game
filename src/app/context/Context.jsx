@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { checkLife } from '../utils/utils';
 import { getValidLocalStorageBoard } from '../utils/validators';
+import { socket } from '../components/Room';
 
 const fleet = [
     { id: 4, size: 4, quantity: 1, type: ['A'] },
@@ -121,11 +122,11 @@ export const gameState = create((set, get) => ({
     setRoomId: (id) => {
         set({ roomId: id });
     },
-
+    setWinner: (winner) => set({ winner: winner }),
     checkGame: (board, squares) => {
         const destroyedShips = checkLife(board, squares);
         if (destroyedShips.length === 10) {
-            // to do winner
+            socket.emit('setWinner', get().motion);
         }
         return destroyedShips;
     },

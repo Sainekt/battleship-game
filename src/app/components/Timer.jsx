@@ -22,7 +22,7 @@ export default function Timer() {
     const timeOutGame = useRef(null);
 
     useEffect(() => {
-        if (game) {
+        if (game || winner) {
             clearTimeout(timeOutStart.current);
             return;
         }
@@ -63,9 +63,6 @@ export default function Timer() {
             clearTimeout(timeOutGame.current);
             return;
         }
-        console.log(motion);
-        console.log(timer);
-
         username === motion && timer > 0
             ? setText(`Yours move: `)
             : setText(`Player's turn: ${motion}`);
@@ -91,6 +88,9 @@ export default function Timer() {
     }, [motion, timer, game, winner]);
 
     function getText() {
+        if (winner) {
+            return winner === username ? "You've won" : "You've lost";
+        }
         if (timer > 0 && !game) {
             return `${text} ${timer}`;
         } else if (timer > 0 && game) {
