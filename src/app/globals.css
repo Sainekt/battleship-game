@@ -86,6 +86,7 @@
 
 .button-nav {
   margin: 0 10px; /* Отступы между кнопками */
+  text-decoration: none;
   padding: 10px 15px; /* Отступы внутри кнопок */
   border: none; /* Убирает границу */
   border-radius: 5px; /* Закругленные углы */
@@ -94,7 +95,7 @@
   cursor: pointer; /* Указатель при наведении */
 }
 
-.logoutButton {
+.logout-btn {
   padding: 10px 15px; /* Отступы внутри кнопки выхода */
   text-decoration: none;
   border: none; /* Убирает границу */
@@ -102,4 +103,41 @@
   background-color: #dc3545; /* Цвет фона кнопки выхода */
   color: white; /* Цвет текста кнопки выхода */
   cursor: pointer; /* Указатель при наведении */
+}
+
+/* Стили для модального окна */
+.modal {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5); /* Затемнение фона */
+  z-index: 1000; /* Убедитесь, что модальное окно поверх всего */
+  overflow: hidden; /* Блокируем прокрутку основного окна */
+}
+
+.modal-dialog {
+  background-color: white; /* Цвет фона модального окна */
+  border-radius: 8px; /* Закругленные углы */
+  width: 80%; /* Максимальная ширина модального окна (80% от ширины экрана) */
+  margin: 20px; /* Отступы от краев экрана */
+  max-height: 80%; /* Максимальная высота модального окна */
+  overflow-y: auto; /* Прокрутка по вертикали, если содержимое превышает высоту */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Тень */
+}
+
+.modal-header, .modal-footer {
+  padding: 15px; /* Отступы */
+}
+
+.modal-title {
+  margin: 0; /* Убираем отступы */
+}
+
+.modal-body {
+  padding: 5px; /* Отступы для тела модального окна */
 }

@@ -45,6 +45,18 @@ app.prepare().then(() => {
             socket.roomId = roomId;
             socket.to(roomId).emit('joinedRoom', username);
         });
+        socket.on('getRoomArray', () => {
+            const roomsMap = io.of('/').adapter.rooms;
+            const roomsIds = roomsMap.keys();
+            const sockets = new Set(io.sockets.sockets.keys());
+            const rooms = [];
+            for (const roomId of roomsIds) {
+                if (!sockets.has(roomId) && roomsMap.get(roomId).size < 2) {
+                    rooms.push(roomId);
+                }
+            }
+            socket.emit('getRoomArray', rooms);
+        });
 
         socket.on('shot', (shot) => {
             socket.to(socket.roomId).emit('shot', shot);

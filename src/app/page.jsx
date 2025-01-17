@@ -1,7 +1,7 @@
 import Board from './components/Board';
 import Panel from './components/Panel';
 import NavBar from './components/Navbar';
-import Timer from './components/Timer'
+import Timer from './components/Timer';
 import Createroom from './components/Room';
 import './globals.css';
 
