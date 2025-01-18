@@ -1,6 +1,7 @@
+'use server';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { validateToken } from '../../utils/validators';
+import { validateToken } from '../../utils/validatorsServer';
 
 export async function signInMiddleware(request: NextRequest) {
     const tokenObj = request.cookies.get('token');

@@ -2,7 +2,10 @@
 import Square from './Square';
 import { useState, useEffect } from 'react';
 import { getStyle, markerMiss } from '../utils/utils';
-import { validatePlace } from '../utils/validators';
+import {
+    validatePlace,
+    getValidLocalStorageBoard,
+} from '../utils/validatorsClient';
 import { gameState, userStore, useStore } from '../context/Context';
 import { socket } from './Room';
 import { CHAR_LIST } from '../utils/constants';
@@ -41,11 +44,13 @@ export default function Board() {
         squares,
         setSquares,
         ready,
-        fleet1: fleet,
+        fleet,
+        setFleet,
         ship,
         sizeDecrement,
         direction,
         setDirection,
+        checkAllShipPlaced,
     } = useStore((state) => state);
     const [squares2, setSquares2] = useState(Array(100).fill(null));
     const {
@@ -60,6 +65,15 @@ export default function Board() {
         setMove,
     } = gameState((state) => state);
     const { username } = userStore((state) => state);
+    useEffect(() => {
+        // get data in local storage
+        const { storageSquares, storageFleet } = getValidLocalStorageBoard();
+        if (storageFleet && storageSquares) {
+            setFleet(storageFleet);
+            setSquares(storageSquares);
+            checkAllShipPlaced();
+        }
+    }, []);
 
     useEffect(() => {
         // update board 1 if enemy do shot

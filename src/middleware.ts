@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { validateToken } from './app/utils/validators';
+import { validateToken } from './app/utils/validatorsServer';
 import { signInMiddleware } from './app/(pages)/signin/middleware';
 
 export async function middleware(request: NextRequest) {

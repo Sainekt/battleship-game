@@ -36,11 +36,11 @@ export async function getToken() {
     const cookieStore = await cookies();
     const tokenObj = cookieStore.get('token').value;
     const [prefix, token] = tokenObj.split(' ');
-    return token;
+    return [prefix, token];
 }
 
 export async function getUsername() {
-    const token = await getToken();
+    const [prefix, token] = await getToken();
     const decoded = await decodeToken(token);
     return decoded.username;
 }

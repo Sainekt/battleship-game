@@ -1,7 +1,10 @@
 'use server';
 
-import { validateSignUpSignIn, validateJson } from '../../utils/validators';
-import { HEAREDS } from '../../utils/constants';
+import {
+    validateSignUpSignIn,
+    validateJson,
+} from '../../utils/validatorsServer';
+import { HEADERS } from '../../utils/constants';
 import { createUser } from '../../db/connection';
 
 interface SignUpData {
@@ -13,11 +16,11 @@ interface SignUpData {
 export async function POST(request: Request): Promise<Response> {
     const data: SignUpData = await validateJson(request);
     const { username, password, email } = data;
-    const result = validateSignUpSignIn(data);
+    const result = await validateSignUpSignIn(data);
     if (!result.success) {
         return new Response(JSON.stringify(result), {
             status: 400,
-            headers: HEAREDS,
+            headers: HEADERS,
         });
     }
     try {
@@ -27,9 +30,9 @@ export async function POST(request: Request): Promise<Response> {
             JSON.stringify({ error: 'username or email is already exists' }),
             {
                 status: 400,
-                headers: HEAREDS,
+                headers: HEADERS,
             }
         );
     }
-    return new Response(null, { status: 201, headers: HEAREDS });
+    return new Response(null, { status: 201, headers: HEADERS });
 }

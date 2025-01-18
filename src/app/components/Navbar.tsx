@@ -1,13 +1,15 @@
 'use client';
 import Link from 'next/link';
-import { removeCookieToken, getUsername } from '../security/token';
-import { getStats } from '../db/connection';
+import { removeCookieToken, getToken } from '../security/token';
 import { useState, useEffect } from 'react';
 import { userStore } from '../context/Context';
 import FindGame from './FindGame';
+import { HEADERS } from '../utils/constants';
 
 export default function NavBar() {
     const {
+        id,
+        setId,
         username,
         setUsername,
         games,
@@ -20,18 +22,25 @@ export default function NavBar() {
     const [findgame, setFindgame] = useState(false);
 
     useEffect(() => {
-        getUsername()
-            .then((username) => {
-                setUsername(username);
-                getStats(username)
-                    .then((value) => {
-                        setGames(value.countGames);
-                        setVictories(value.victories);
-                        setAvg(value.avg);
-                    })
-                    .catch((err) => console.log(err));
-            })
-            .catch((err) => console.log(err));
+        const domain = `${location.protocol}//${location.host}`;
+
+        getToken().then(([prefix, token]) => {
+            const headers = { ...HEADERS, Authorization: `${prefix} ${token}` };
+            fetch(`${domain}/api/users/me`, {
+                method: 'GET',
+                headers: headers,
+            }).then((response) => {
+                if (response.ok) {
+                    response.json().then((data) => {
+                        setId(data.id);
+                        setUsername(data.username);
+                        setGames(data.games.length);
+                        setVictories(data.victories);
+                        setAvg(data.avg);
+                    });
+                }
+            });
+        });
     }, []);
 
     function handleFindGame() {

@@ -6,7 +6,7 @@ export default function Panel() {
     useSendGameState();
 
     const {
-        fleet1: fleet,
+        fleet,
         setShip,
         ship,
         setSquares,
@@ -83,7 +83,7 @@ export default function Panel() {
             } else {
                 setPlayer2Ready(!ready);
             }
-            setMyBoard(squares)
+            setMyBoard(squares);
         }
     }
     return (

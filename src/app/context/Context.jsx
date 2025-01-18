@@ -1,24 +1,22 @@
+'use  client';
 import { create } from 'zustand';
 import { checkLife } from '../utils/utils';
-import { getValidLocalStorageBoard } from '../utils/validators';
 import { socket } from '../components/Room';
 import { FLEET } from '../utils/constants';
-
-const { shipPlased, storageSquares, storageFleet } =
-    getValidLocalStorageBoard();
 
 export const useStore = create((set, get) => ({
     gameStart: true,
     playersTurn: null,
-    fleet1: storageFleet ? [...storageFleet] : [...FLEET],
-    fleet2: [...FLEET],
-    squares: storageSquares ? storageSquares : Array(100).fill(null),
+    fleet: [...FLEET],
+    squares: Array(100).fill(null),
     ship: null,
     direction: null,
     ready: false,
-    allShipPlaced: shipPlased,
+    allShipPlaced: false,
+    setFleet: (fleet) => set({ fleet }),
 
-    checkAllShipPlaced: (fleet = get().fleet1) => {
+    checkAllShipPlaced: () => {
+        const fleet = get().fleet;
         const count = fleet.reduce((accum, current) => {
             if (!current.quantity && !current.size) {
                 accum++;
@@ -41,7 +39,7 @@ export const useStore = create((set, get) => ({
         })),
 
     sizeDecrement: (newValues) => {
-        const fleet = get().fleet1;
+        const fleet = get().fleet;
         const ship = get().ship;
         const shipObjIndex = fleet.findIndex((shipObj) => shipObj.id === +ship);
 
@@ -63,27 +61,29 @@ export const useStore = create((set, get) => ({
             };
 
             if (!shipObj.size && !shipObj.quantity > 0) {
-                set({ fleet1: updatedFleet, ship: null, direction: null });
+                set({ fleet: updatedFleet, ship: null, direction: null });
                 get().checkAllShipPlaced(updatedFleet);
                 localStorage.setItem('squares', JSON.stringify(newValues));
                 localStorage.setItem('fleet', JSON.stringify(updatedFleet));
             }
-            set({ fleet1: updatedFleet });
+            set({ fleet: updatedFleet });
             set({ squares: newValues });
             return true;
         }
         return false;
     },
     reset: () => {
-        set({ ship: null, fleet1: [...FLEET] });
+        set({ ship: null, fleet: [...FLEET] });
     },
 }));
 
 export const userStore = create((set, get) => ({
+    id: null,
     username: null,
     games: null,
     victories: null,
     avg: null,
+    setId: (id) => set({ id: id }),
     setUsername: (username) => set({ username: username }),
     setGames: (games) => set({ games: games }),
     setVictories: (victories) => set({ victories: victories }),

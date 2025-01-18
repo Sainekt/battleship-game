@@ -1,3 +1,4 @@
+'use client';
 import Board from './components/Board';
 import Panel from './components/Panel';
 import NavBar from './components/Navbar';

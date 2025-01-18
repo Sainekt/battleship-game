@@ -1,5 +1,5 @@
 // return class style for square
-import { validCoord } from './validators';
+import { VALID_COORD } from './constants';
 import { FLEET_COUNT } from '../utils/constants';
 
 export function getStyle(start = false, disabled = false, ship = false) {
@@ -54,8 +54,8 @@ export function markerMiss(array) {
     const allCoord = [];
     for (const element of array) {
         for (const i of element) {
-            const coord = validCoord[i]
-                ? validCoord[i]
+            const coord = VALID_COORD[i]
+                ? VALID_COORD[i]
                 : [i - 11, i - 10, i - 9, i - 1, i + 1, i + 9, i + 10, i + 11];
             allCoord.push(...coord);
         }

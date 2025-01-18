@@ -1,6 +1,7 @@
 'use server';
 import mysql from 'mysql2';
 import { hashPassword } from '../security/password.js';
+import { date } from 'zod';
 
 const connection = mysql.createConnection({
     host: process.env.DB_HOST,
@@ -154,29 +155,9 @@ export async function getUserById(id) {
     }
 }
 
-async function getGames(userId) {
-    try {
-        const sql = `SELECT * FROM games WHERE player_1 = ? || player_2 = ?`;
-        return new Promise((resolve, reject) => {
-            connection.query(sql, [userId, userId], (err, result) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    return resolve(result);
-                }
-            });
-        });
-    } catch (err) {
-        console.log(`error: ${err}`);
-    }
-}
-
-export async function getStats(username) {
-    const users = await getUser(username);
-    const user = users[0];
-    const games = await getGames(user.id);
+function getStats(userId, games) {
     const victories = games.reduce((accum, current) => {
-        if (current.winner === user.id) {
+        if (current.winner === userId) {
             return accum + 1;
         }
         return accum;
@@ -189,4 +170,51 @@ export async function getStats(username) {
         losses: losses,
         avg: avg,
     };
+}
+
+export async function getUserAllInfo(username) {
+    return new Promise((resolve, reject) => {
+        const sql = `
+        SELECT 
+            users.id,
+            users.username, 
+            users.email, 
+            games.id AS gameId, 
+            games.player_1,
+            games.player_2,
+            games.winner,
+            games.status,
+            games.score,
+            games.created_at,
+            games.updated_at
+        FROM users 
+        LEFT JOIN games ON users.id = games.player_1 OR users.id = games.player_2
+        WHERE username = ?`;
+        connection.query(sql, [username], (err, results) => {
+            if (err) {
+                return reject(err);
+            } else {
+                const data = {
+                    id: results[0].id,
+                    username: results[0].username,
+                    email: results[0].email,
+                    games: [],
+                };
+                if (results[0].gameId) {
+                    data.games = results.map((game) => ({
+                        id: game.gameId,
+                        player_1: game.player_1,
+                        player_2: game.player_2,
+                        winner: game.winner,
+                        status: game.status,
+                        score: game.score,
+                        created_at: game.created_at,
+                        updated_at: game.updated_at,
+                    }));
+                }
+                const result = { ...data, ...getStats(data.id, data.games) };
+                return resolve(result);
+            }
+        });
+    });
 }
