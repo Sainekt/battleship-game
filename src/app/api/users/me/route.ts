@@ -5,6 +5,7 @@ import { decodeToken } from '../../../security/token';
 
 export async function GET(request: Request): Promise<Response> {
     const tokenobj = request.headers.get('authorization');
+
     if (!tokenobj) {
         return new Response(JSON.stringify({ detail: 'Unauthorized' }), {
             status: 401,

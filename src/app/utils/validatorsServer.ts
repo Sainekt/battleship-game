@@ -51,3 +51,38 @@ export async function validateJson(request: Request): Promise<SignUpData> {
         return { username: undefined, password: undefined, email: undefined };
     }
 }
+
+interface GameCreateObj {
+    player_1: string;
+    player_2: string;
+}
+
+export async function validatePlayerJson(
+    request: Request
+): Promise<GameCreateObj> {
+    try {
+        const data: GameCreateObj = await request.json();
+        return data;
+    } catch {
+        return { player_1: null, player_2: null };
+    }
+}
+
+export async function validateUpdateGameJson(request: Request) {
+    let error: { [key: string]: string } = {};
+
+    const UpdateChema = z.object({
+        winner: z.number(),
+        status: z.string().regex(/^(in process|finished)$/, 'invalid status'),
+        score: z.number().gte(0).lte(100),
+    });
+    const data = await request.json();
+    const result = UpdateChema.safeParse({ ...data });
+    if (!result.success) {
+        result.error.issues.forEach((value) => {
+            error[value.path[0]] = value.message;
+        });
+        return { success: false, data: error };
+    }
+    return result;
+}

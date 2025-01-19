@@ -2,7 +2,7 @@
 import { FLEET_COUNT, VALID_COORD } from './constants';
 
 // board coord for left and right line
-export function getValidLocalStorageBoard(squares: string, fleet: string) {
+export function getValidLocalStorageBoard() {
     interface ResultObj {
         storageSquares: Array<string>;
         storageFleet: object;

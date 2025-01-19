@@ -4,7 +4,7 @@ import {
     validateJson,
 } from '../../utils/validatorsServer';
 import { HEADERS } from '../../utils/constants';
-import { getUser } from '../../db/connection';
+import { getUserByUsername } from '../../db/connection';
 import { comparePassword } from '../../security/password';
 import { generateToken } from '../../security/token';
 interface SignInData {
@@ -23,7 +23,7 @@ export async function POST(request: Request): Promise<Response> {
         });
     }
     try {
-        const users = await getUser(username);
+        const users = await getUserByUsername(username);
         if (users.length === 0) {
             return new Response(
                 JSON.stringify({ username: 'User not found' }),
