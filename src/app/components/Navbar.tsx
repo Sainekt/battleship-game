@@ -41,7 +41,7 @@ export default function NavBar() {
                 }
             });
         });
-    }, []);
+    }, [games]);
 
     function handleFindGame() {
         setFindgame(!findgame);

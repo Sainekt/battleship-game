@@ -66,11 +66,11 @@ app.prepare().then(() => {
         });
 
         socket.on('updateState', (gameState) => {
-            socket.to(gameState.roomId).emit('loadState', gameState);
+            socket.to(socket.roomId).emit('loadState', gameState);
         });
 
         socket.on('sendState', (gameState) => {
-            socket.to(gameState.roomId).emit('sendState', gameState);
+            socket.to(socket.roomId).emit('sendState', gameState);
         });
         socket.on('checkStart', (status) => {
             io.to(socket.roomId).emit('checkStart', status);
