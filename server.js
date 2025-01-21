@@ -89,6 +89,9 @@ app.prepare().then(() => {
         socket.on('setWinner', (winner) => {
             io.to(socket.roomId).emit('setWinner', winner);
         });
+        socket.on('updateUserData', () => {
+            io.to(socket.roomId).emit('updateUserData');
+        });
 
         socket.on('leaveRoom', (username) => {
             console.log(`User left room: ${username}`);

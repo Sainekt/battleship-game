@@ -1,10 +1,11 @@
 'use client';
 import Link from 'next/link';
-import { removeCookieToken, getToken } from '../security/token';
+import { removeCookieToken } from '../security/token';
 import { useState, useEffect } from 'react';
 import { userStore } from '../context/Context';
 import FindGame from './FindGame';
 import { HEADERS } from '../utils/constants';
+import { socket } from '../components/Room';
 
 export default function NavBar() {
     const {
@@ -22,26 +23,29 @@ export default function NavBar() {
     const [findgame, setFindgame] = useState(false);
 
     useEffect(() => {
-        const domain = `${location.protocol}//${location.host}`;
-
-        getToken().then(([prefix, token]) => {
-            const headers = { ...HEADERS, Authorization: `${prefix} ${token}` };
+        function setUserData() {
+            const domain = `${location.protocol}//${location.host}`;
             fetch(`${domain}/api/users/me`, {
                 method: 'GET',
-                headers: headers,
+                headers: HEADERS,
             }).then((response) => {
                 if (response.ok) {
                     response.json().then((data) => {
                         setId(data.id);
                         setUsername(data.username);
-                        setGames(data.games.length);
+                        setGames(data.games);
                         setVictories(data.victories);
                         setAvg(data.avg);
                     });
                 }
             });
-        });
-    }, [games]);
+        }
+        setUserData();
+        socket.on('updateUserData', setUserData);
+        return () => {
+            socket.off('updateUserData', setUserData);
+        };
+    }, []);
 
     function handleFindGame() {
         setFindgame(!findgame);
@@ -53,7 +57,7 @@ export default function NavBar() {
                 <div className='userInfo'>
                     {username}
                     <br />
-                    Games: {games}
+                    Games: {games.length}
                 </div>
                 <div className='userInfo'>
                     Victories: {victories}

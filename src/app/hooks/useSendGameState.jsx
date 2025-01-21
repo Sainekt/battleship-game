@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { gameState, userStore, useStore } from '../context/Context';
 import { socket } from '../components/Room';
 import { TIME_FOR_MOTION } from '../utils/constants';
+import { HEADERS } from '../utils/constants';
 
 export default function useSendGameState() {
     const {
@@ -12,9 +13,6 @@ export default function useSendGameState() {
         player2Ready,
         player1,
         player2,
-        winner,
-        boardPlayer1,
-        boardPlayer2,
         setPlayer1Ready,
         setPlayer2Ready,
         game,
@@ -23,14 +21,11 @@ export default function useSendGameState() {
         motion,
         setMotion,
         setTimer,
-        timer,
-        move,
         setMove,
         setWinner,
-        setWinnerId,
         setGameId,
     } = gameState((state) => state);
-    const { username, id: userId, setGames } = userStore((state) => state);
+    const { username, id: userId } = userStore((state) => state);
     const [enemyId, setEnemyId] = useState(null);
     const { ready, setReady } = useStore((state) => state);
     const fetchRef = useRef(null);
@@ -48,13 +43,16 @@ export default function useSendGameState() {
             if (username === roomId) {
                 setPlayer2Ready(state.player2Ready);
                 setEnemyId(state.userId);
+                setGameId(gameId || state.gameId);
             } else {
                 setEnemyId(state.userId);
                 setPlayer1Ready(state.player1Ready);
+                setGameId(gameId || state.gameId);
             }
+            console.log(gameId);
         }
         function handleSetWinner(winner) {
-            if (roomId === username && winner && gameId && !fetchRef.current) {
+            if (roomId === username && gameId && !fetchRef.current) {
                 const winnerId = winner === username ? userId : enemyId;
                 const body = {
                     winner: winnerId,
@@ -67,13 +65,12 @@ export default function useSendGameState() {
                 }).catch((err) => {
                     console.error(err);
                 });
+                socket.emit('updateUserData');
             }
             setWinner(winner);
             setMotion(null);
             setTimer(0);
             setGame(false);
-            setGames([]);
-            console.log('in setWinner');
         }
 
         function handleSetMotion(user) {
@@ -107,9 +104,7 @@ export default function useSendGameState() {
                     timeOut = setTimeout(() => {
                         fetch(`${domain}/api/games`, {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
+                            headers: HEADERS,
                             body: JSON.stringify({
                                 player_1: player1,
                                 player_2: player2,
@@ -160,7 +155,6 @@ export default function useSendGameState() {
         roomId,
         player1Ready,
         player2Ready,
-        winner,
         game,
         motion,
         ready,

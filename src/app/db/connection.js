@@ -194,7 +194,7 @@ function getStats(userId, games) {
         countGames: games.length,
         victories: victories,
         losses: losses,
-        avg: avg,
+        avg: avg.toFixed(2),
     };
 }
 

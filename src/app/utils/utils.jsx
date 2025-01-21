@@ -64,3 +64,13 @@ export function markerMiss(array) {
 
     return result;
 }
+
+export async function getTokenInRequest(request) {
+    const tokenCookiesOrHeaders =
+        request.cookies.get('token') || request.headers.get('authorization');
+    const tokenValue =
+        typeof tokenCookiesOrHeaders === 'object'
+            ? tokenCookiesOrHeaders.value
+            : tokenCookiesOrHeaders;
+    return tokenValue.split(' ');
+}

@@ -1,12 +1,11 @@
 'use client';
 import { socket } from './Room';
 import { useEffect, useState } from 'react';
-import { userStore, gameState } from '../context/Context';
+import { userStore } from '../context/Context';
 
 export default function FindGame({ handleSetModal }) {
     const [rooms, setRooms] = useState(null);
     const { username } = userStore((state) => state);
-    const { roomId } = gameState((state) => state);
     function closeModal() {
         handleSetModal();
     }
@@ -22,7 +21,12 @@ export default function FindGame({ handleSetModal }) {
         }, 1000);
 
         function handleGetRoomArray(array) {
-            setRooms([...array]);
+            const filterArray = array.filter((value) => {
+                if (value && value !== username) {
+                    return value;
+                }
+            });
+            setRooms(filterArray);
         }
         socket.on('getRoomArray', handleGetRoomArray);
 

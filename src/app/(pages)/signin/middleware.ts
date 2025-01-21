@@ -11,7 +11,7 @@ export async function signInMiddleware(request: NextRequest) {
     try {
         const [bearer, token] = tokenObj.value.split(' ');
         const tokenIsValid = await validateToken(token);
-        if (tokenIsValid) {
+        if (tokenIsValid && bearer === 'Bearer') {
             return NextResponse.redirect(new URL('/', request.url));
         }
     } catch (error) {

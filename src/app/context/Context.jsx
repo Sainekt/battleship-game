@@ -80,7 +80,7 @@ export const useStore = create((set, get) => ({
 export const userStore = create((set, get) => ({
     id: null,
     username: null,
-    games: null,
+    games: [],
     victories: null,
     avg: null,
     setId: (id) => set({ id: id }),
