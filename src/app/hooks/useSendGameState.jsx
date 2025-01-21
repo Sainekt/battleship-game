@@ -30,7 +30,7 @@ export default function useSendGameState() {
         setWinnerId,
         setGameId,
     } = gameState((state) => state);
-    const { username, id: userId } = userStore((state) => state);
+    const { username, id: userId, setGames } = userStore((state) => state);
     const [enemyId, setEnemyId] = useState(null);
     const { ready, setReady } = useStore((state) => state);
     const fetchRef = useRef(null);
@@ -72,6 +72,7 @@ export default function useSendGameState() {
             setMotion(null);
             setTimer(0);
             setGame(false);
+            setGames([]);
             console.log('in setWinner');
         }
 
