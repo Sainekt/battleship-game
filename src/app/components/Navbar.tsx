@@ -4,6 +4,7 @@ import { removeCookieToken } from '../security/token';
 import { useState, useEffect } from 'react';
 import { userStore } from '../context/Context';
 import FindGame from './FindGame';
+import Profile from './Profile';
 import { HEADERS } from '../utils/constants';
 import { socket } from '../components/Room';
 
@@ -21,6 +22,7 @@ export default function NavBar() {
         setAvg,
     } = userStore((state) => state);
     const [findgame, setFindgame] = useState(false);
+    const [profile, setProfile] = useState(false);
 
     useEffect(() => {
         function setUserData() {
@@ -50,6 +52,9 @@ export default function NavBar() {
     function handleFindGame() {
         setFindgame(!findgame);
     }
+    function handleProfile() {
+        setProfile(!profile);
+    }
 
     return (
         <>
@@ -68,7 +73,9 @@ export default function NavBar() {
                     <button className='button-nav' onClick={handleFindGame}>
                         Find game
                     </button>
-                    <button className='button-nav'>Profile</button>
+                    <button className='button-nav' onClick={handleProfile}>
+                        Profile
+                    </button>
                 </div>
                 <Link
                     className='logout-btn'
@@ -80,6 +87,9 @@ export default function NavBar() {
             </nav>
             {findgame ? (
                 <FindGame handleSetModal={handleFindGame}></FindGame>
+            ) : null}
+            {profile ? (
+                <Profile handleSetModal={handleProfile}></Profile>
             ) : null}
         </>
     );

@@ -1,6 +1,7 @@
 'use server';
 import mysql from 'mysql2';
 import { hashPassword } from '../security/password.js';
+import { error } from 'console';
 
 const connection = mysql.createConnection({
     host: process.env.DB_HOST,
@@ -57,7 +58,7 @@ function createTables() {
     createTableGames();
     connection.end();
 }
-
+// users
 export async function createUser(username, password, email = null) {
     const hashedPassword = await hashPassword(password);
     return new Promise((resolve, reject) => {
@@ -102,7 +103,83 @@ export async function getUsersByUsername(usernames) {
         });
     });
 }
+export async function getUsersById(id) {
+    try {
+        const sql = `SELECT * FROM users WHERE id = ?`;
+        return new Promise((resolve, reject) => {
+            connection.query(sql, [id], (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    return resolve(result);
+                }
+            });
+        });
+    } catch (err) {
+        console.log(`error: ${err}`);
+    }
+}
 
+export async function getUserAllInfo(username) {
+    return new Promise((resolve, reject) => {
+        const sql = `
+        SELECT 
+            users.id,
+            users.username, 
+            users.email, 
+            games.id AS gameId, 
+            games.player_1,
+            games.player_2,
+            games.winner,
+            games.status,
+            games.score,
+            games.created_at,
+            games.updated_at
+        FROM users 
+        LEFT JOIN games ON users.id = games.player_1 OR users.id = games.player_2
+        WHERE username = ?`;
+        connection.query(sql, [username], (err, results) => {
+            if (err) {
+                return reject(err);
+            } else {
+                const data = {
+                    id: results[0].id,
+                    username: results[0].username,
+                    email: results[0].email,
+                    games: [],
+                };
+                if (results[0].gameId) {
+                    data.games = results.map((game) => ({
+                        id: game.gameId,
+                        player_1: game.player_1,
+                        player_2: game.player_2,
+                        winner: game.winner,
+                        status: game.status,
+                        score: game.score,
+                        created_at: game.created_at,
+                        updated_at: game.updated_at,
+                    }));
+                }
+                const result = { ...data, ...getStats(data.id, data.games) };
+                return resolve(result);
+            }
+        });
+    });
+}
+
+export async function getUsersAll() {
+    return new Promise((resolve, reject) => {
+        const sql = `SELECT id, username FROM users ORDER BY id`;
+        connection.query(sql, (err, results) => {
+            if (err) {
+                return reject(err);
+            } else {
+                return resolve(results);
+            }
+        });
+    });
+}
+// games
 export async function createGame(player1_id, player2_id) {
     try {
         const playerId = player1_id;
@@ -164,23 +241,6 @@ export async function getGameById(id) {
     }
 }
 
-export async function getUsersById(id) {
-    try {
-        const sql = `SELECT * FROM users WHERE id = ?`;
-        return new Promise((resolve, reject) => {
-            connection.query(sql, [id], (err, result) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    return resolve(result);
-                }
-            });
-        });
-    } catch (err) {
-        console.log(`error: ${err}`);
-    }
-}
-
 function getStats(userId, games) {
     const victories = games.reduce((accum, current) => {
         if (current.winner === userId) {
@@ -196,51 +256,4 @@ function getStats(userId, games) {
         losses: losses,
         avg: avg.toFixed(2),
     };
-}
-
-export async function getUserAllInfo(username) {
-    return new Promise((resolve, reject) => {
-        const sql = `
-        SELECT 
-            users.id,
-            users.username, 
-            users.email, 
-            games.id AS gameId, 
-            games.player_1,
-            games.player_2,
-            games.winner,
-            games.status,
-            games.score,
-            games.created_at,
-            games.updated_at
-        FROM users 
-        LEFT JOIN games ON users.id = games.player_1 OR users.id = games.player_2
-        WHERE username = ?`;
-        connection.query(sql, [username], (err, results) => {
-            if (err) {
-                return reject(err);
-            } else {
-                const data = {
-                    id: results[0].id,
-                    username: results[0].username,
-                    email: results[0].email,
-                    games: [],
-                };
-                if (results[0].gameId) {
-                    data.games = results.map((game) => ({
-                        id: game.gameId,
-                        player_1: game.player_1,
-                        player_2: game.player_2,
-                        winner: game.winner,
-                        status: game.status,
-                        score: game.score,
-                        created_at: game.created_at,
-                        updated_at: game.updated_at,
-                    }));
-                }
-                const result = { ...data, ...getStats(data.id, data.games) };
-                return resolve(result);
-            }
-        });
-    });
 }
