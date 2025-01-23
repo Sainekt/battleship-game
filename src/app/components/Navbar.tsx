@@ -14,6 +14,7 @@ export default function NavBar() {
         setId,
         username,
         setUsername,
+        setEmail,
         games,
         setGames,
         victories,
@@ -35,6 +36,7 @@ export default function NavBar() {
                     response.json().then((data) => {
                         setId(data.id);
                         setUsername(data.username);
+                        setEmail(data.email);
                         setGames(data.games);
                         setVictories(data.victories);
                         setAvg(data.avg);
@@ -70,10 +72,18 @@ export default function NavBar() {
                     W/L: {avg}
                 </div>
                 <div className='navButtons'>
-                    <button className='button-nav' onClick={handleFindGame}>
+                    <button
+                        className='button-nav'
+                        onClick={handleFindGame}
+                        disabled={username ? false : true}
+                    >
                         Find game
                     </button>
-                    <button className='button-nav' onClick={handleProfile}>
+                    <button
+                        className='button-nav'
+                        onClick={handleProfile}
+                        disabled={username ? false : true}
+                    >
                         Profile
                     </button>
                 </div>

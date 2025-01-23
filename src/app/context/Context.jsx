@@ -80,10 +80,12 @@ export const useStore = create((set, get) => ({
 export const userStore = create((set, get) => ({
     id: null,
     username: null,
+    email: null,
     games: [],
     victories: null,
     avg: null,
     setId: (id) => set({ id: id }),
+    setEmail: (email) => set({ email: email }),
     setUsername: (username) => set({ username: username }),
     setGames: (games) => set({ games: games }),
     setVictories: (victories) => set({ victories: victories }),

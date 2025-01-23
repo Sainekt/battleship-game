@@ -4,23 +4,36 @@ import { decodeToken } from '../security/token';
 import { JWTPayload } from 'jose';
 
 export async function validateSignUpSignIn(data: object) {
-    let error: { [key: string]: string } = {};
     const UserSchema = z
         .object({
-            username: z.string().min(2).max(100),
-            password: z.string().min(5).max(100),
-            email: z.string().min(5).max(100).email(),
+            username: z.string().min(2).max(50),
+            password: z.string().min(5).max(20),
+            email: z.string().min(5).max(50).email(),
         })
         .partial({ email: true });
+    return parse(data, UserSchema);
+}
 
-    const result = UserSchema.safeParse({
+export async function validateChangeUserData(data: object) {
+    const Schema = z
+        .object({
+            newPassword: z.string().min(5).max(20),
+            email: z.string().min(5).max(50).email(),
+        })
+        .partial({ email: true, newPassword: true });
+    return parse(data, Schema);
+}
+
+function parse(data: object, schema: z.Schema) {
+    let error: { [key: string]: string } = {};
+    const result = schema.safeParse({
         ...data,
     });
     if (!result.success) {
         result.error.issues.forEach((value) => {
             error[value.path[0]] = value.message;
         });
-        return error;
+        return { success: false, data: error };
     }
     return result;
 }

@@ -98,6 +98,7 @@
 .logout-btn {
   padding: 10px 15px; /* Отступы внутри кнопки выхода */
   text-decoration: none;
+  margin: 10px;
   border: none; /* Убирает границу */
   border-radius: 5px; /* Закругленные углы */
   background-color: #dc3545; /* Цвет фона кнопки выхода */
@@ -131,13 +132,47 @@
 }
 
 .modal-header, .modal-footer {
-  padding: 15px; /* Отступы */
+  justify-content: center;
 }
 
 .modal-title {
-  margin: 0; /* Убираем отступы */
+  margin: 10px; /* Убираем отступы */
+  text-align: center;
 }
 
 .modal-body {
-  padding: 5px; /* Отступы для тела модального окна */
+  justify-content: center;
+  margin: 3px;
+  padding: 1px 20px; /* Отступы для тела модального окна */
+}
+.game-history {
+  border: 1px solid #ccc; /* Граница вокруг каждого элемента истории */
+  border-radius: 8px; /* Закругленные углы */
+  padding: 5px; /* Внутренние отступы */
+  margin: 5px 0; /* Отступы между элементами истории */
+  background-color: #f9f9f9; /* Цвет фона */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Тень для эффекта поднятия */
+}
+
+.game-header {
+  font-weight: bold; /* Жирный шрифт для результата */
+  margin: -20px 0;
+  color: #000000; /* Цвет для победы */
+  display: flex; /* Используем flexbox для выравнивания */
+  justify-content: space-between; /* Разделяем элементы по краям */
+  align-items: center; /* Выравниваем по центру по вертикали */
+}
+
+.game-players {
+  font-size: 16px; /* Размер шрифта для игроков */
+  margin: 5px 0; /* Отступы сверху и снизу */
+}
+
+.player {
+  font-weight: bold; /* Жирный шрифт для имен игроков */
+  color: #4476ff;
+}
+
+.winner-label {
+  font-weight: bold; /* Жирный шрифт для метки победителя */
 }

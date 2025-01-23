@@ -99,8 +99,8 @@ export default function Createroom() {
     }
 
     function handleLeaveRoom() {
-        if (ready){
-            setReady()
+        if (ready) {
+            setReady();
         }
         setPlayer1(null);
         setPlayer1Ready(false);
@@ -113,10 +113,10 @@ export default function Createroom() {
     return (
         <>
             <h2>Room ID: {roomId || 'No room'}</h2>
-            <button onClick={handleCreateRoom} disabled={roomId}>
+            <button onClick={handleCreateRoom} disabled={roomId || !username}>
                 Create Room
             </button>
-            <button onClick={handleJoinRoom} disabled={roomId}>
+            <button onClick={handleJoinRoom} disabled={roomId || !username}>
                 join room
             </button>
             <p>

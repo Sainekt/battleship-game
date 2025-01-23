@@ -2,10 +2,13 @@
 import { useEffect, useState } from 'react';
 import { userStore } from '../context/Context';
 import { HEADERS } from '../utils/constants';
-
+import ChangeProfile from './ChangeProfileForm';
 export default function Profile({ handleSetModal }) {
-    const { id, username, games, victories, avg } = userStore((state) => state);
+    const { id, username, email, games, victories, avg } = userStore(
+        (state) => state
+    );
     const [parseGames, setParseGames] = useState(null);
+    const [changeUserdata, setChangeUserData] = useState(false);
     useEffect(() => {
         if (games.length === 0) {
             return;
@@ -37,6 +40,9 @@ export default function Profile({ handleSetModal }) {
             });
     }, []);
 
+    function toggleChangeUserData() {
+        setChangeUserData(!changeUserdata);
+    }
     function closeModal() {
         handleSetModal();
     }
@@ -52,8 +58,13 @@ export default function Profile({ handleSetModal }) {
                             <h3 className='modal-title'>Profile</h3>
                         </div>
                         <div className='modal-body'>
-                            <h4>ID: {id}</h4>
+                            <h4>User ID: {id}</h4>
                             <h4>Username: {username}</h4>
+                            <h4>email: {email}</h4>
+                            {changeUserdata ? <ChangeProfile /> : null}
+                            <button onClick={toggleChangeUserData}>
+                                {changeUserdata ? 'close' : 'change password'}
+                            </button>
                             <h4>Victories: {victories}</h4>
                             <h4>Lost: {games.length - victories}</h4>
                             <h4>AVG: {avg}</h4>
@@ -61,7 +72,32 @@ export default function Profile({ handleSetModal }) {
                             <h4>Games Played: {games.length}</h4>
                             {parseGames
                                 ? parseGames.map((value) => {
-                                      console.log(value);
+                                      return (
+                                          <div
+                                              className='game-history'
+                                              key={value.id}
+                                          >
+                                              <div className='game-header'>
+                                                  <h5>Game ID: {value.id}</h5>
+                                                  {value.winner === username
+                                                      ? 'Victory'
+                                                      : 'Defeat'}
+                                              </div>
+                                              <div className='game-players'>
+                                                  <span className='player'>
+                                                      {value.player_1}
+                                                  </span>{' '}
+                                                  VS{' '}
+                                                  <span className='player'>
+                                                      {value.player_2}
+                                                  </span>
+                                              </div>
+                                              Winner:{' '}
+                                              {value.winner === username
+                                                  ? 'You'
+                                                  : value.winner}
+                                          </div>
+                                      );
                                   })
                                 : null}
                         </div>

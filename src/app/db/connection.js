@@ -136,8 +136,11 @@ export async function getUserAllInfo(username) {
             games.created_at,
             games.updated_at
         FROM users 
-        LEFT JOIN games ON users.id = games.player_1 OR users.id = games.player_2
-        WHERE username = ?`;
+        LEFT JOIN games 
+            ON (users.id = games.player_1 OR users.id = games.player_2) 
+            AND games.status = 'finished'
+        WHERE username = ?
+        ORDER BY games.created_at DESC`;
         connection.query(sql, [username], (err, results) => {
             if (err) {
                 return reject(err);
@@ -179,6 +182,31 @@ export async function getUsersAll() {
         });
     });
 }
+
+export async function updateUser(id, data) {
+    try {
+        const keys = Object.keys(data);
+        if (keys.length === 0) {
+            throw new Error('No data provided to update');
+        }
+        const placeholders = keys.map((key) => `${key} = ?`).join(', ');
+        const values = [...Object.values(data), id];
+        const sql = `UPDATE users SET ${placeholders} WHERE id = ?`;
+        return new Promise((resolve, reject) => {
+            connection.query(sql, values, (err, results) => {
+                if (err) {
+                    console.error(err);
+                    return reject(err);
+                }
+                return resolve(results);
+            });
+        });
+    } catch (err) {
+        console.error(`Error: ${err.message}`);
+        throw err;
+    }
+}
+
 // games
 export async function createGame(player1_id, player2_id) {
     try {
