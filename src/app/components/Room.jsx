@@ -1,7 +1,8 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { gameState, userStore, useStore } from '../context/Context';
+import Modal from './Modal';
 
 export const socket = io();
 
@@ -25,6 +26,9 @@ export default function Createroom() {
     const { ready, setReady } = useStore((state) => state);
     const { username } = userStore((state) => state);
     const [error, setError] = useState(null);
+    const [sendRematch, setSendRematch] = useState(false);
+    const [rematchTimer, setRematchTimer] = useState(0);
+    const intervalRef = useRef(null);
 
     useEffect(() => {
         socket.on('roomCreated', (room) => {
@@ -101,6 +105,25 @@ export default function Createroom() {
         };
     }, []);
 
+    // timer for Request rematch
+    useEffect(() => {
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        }
+        if (!sendRematch) {
+            setRematchTimer(0);
+            return;
+        }
+        intervalRef.current = setInterval(() => {
+            setRematchTimer((perv) => perv + 1);
+        }, 1000);
+        return () => {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+        };
+    }, [sendRematch]);
+
     function handleCreateRoom() {
         socket.emit('createRoom', username);
     }
@@ -125,19 +148,36 @@ export default function Createroom() {
         socket.emit('leaveRoom', username);
     }
     function handleRematch() {
-        setRematch(true);
         socket.emit('rematch');
+        setSendRematch(true);
+    }
+    function handleModal() {
+        setRematch(!rematch);
+    }
+    function getDataForModal() {
+        return {
+            title: 'Request for a rematch',
+            text: `Player ${
+                username === player1 ? player2 : player1
+            } offers a rematch\n
+            Do you want to play again?`,
+        };
     }
 
     return (
         <>
             <h2>Room ID: {roomId || 'No room'}</h2>
-            {error ? <h3 style={{ color: 'red' }}>{error}</h3> : null}
-            {!winner ? (
-                <button onClick={handleRematch} disabled={rematch}>
-                    Rematch
-                </button>
+            {rematch ? (
+                <Modal
+                    handleModal={handleModal}
+                    data={getDataForModal()}
+                    eventAccept={'acceptRematch'}
+                    eventReject={'rejectRematch'}
+                />
             ) : null}
+            {error ? <h3 style={{ color: 'red' }}>{error}</h3> : null}
+            {winner ? <button onClick={handleRematch}>Rematch</button> : null}
+            {sendRematch ? `Requesting rematch... ${rematchTimer}` : null}
             <button onClick={handleCreateRoom} disabled={roomId || !username}>
                 Create Room
             </button>

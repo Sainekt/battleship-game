@@ -3,8 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { gameState, userStore, useStore } from '../context/Context';
 import { socket } from '../components/Room';
-import { TIME_FOR_MOTION } from '../utils/constants';
-import { HEADERS } from '../utils/constants';
+import { TIME_FOR_MOTION, HEADERS, FLEET } from '../utils/constants';
 
 export default function useSendGameState() {
     const {
@@ -24,10 +23,20 @@ export default function useSendGameState() {
         setMove,
         setWinner,
         setGameId,
+        setRematch,
+        setEnemyBoard,
+        setMyBoard,
     } = gameState((state) => state);
     const { username, id: userId } = userStore((state) => state);
     const [enemyId, setEnemyId] = useState(null);
-    const { ready, setReady } = useStore((state) => state);
+    const {
+        ready,
+        setReady,
+        setSquares,
+        setFleet,
+        checkAllShipPlaced,
+        setSquaresBoard2,
+    } = useStore((state) => state);
     const fetchRef = useRef(null);
 
     const state = {
@@ -36,6 +45,24 @@ export default function useSendGameState() {
         userId,
         gameId,
     };
+    function RematchStateUpdate() {
+        const squares = Array(100).fill(null);
+        setWinner(null);
+        setEnemyBoard(squares);
+        setSquaresBoard2(squares);
+        setPlayer1Ready(false);
+        setPlayer2Ready(false);
+        setMyBoard(null);
+        setGame(false);
+        setMotion(null);
+        setTimer(0);
+        setGameId(null);
+        setReady();
+        setSquares(squares);
+        setRematch(false);
+        setFleet([...FLEET]);
+        checkAllShipPlaced();
+    }
     useEffect(() => {
         const domain = `${location.protocol}//${location.host}`;
 
@@ -131,7 +158,11 @@ export default function useSendGameState() {
             }
         }
         function handleRematch() {
-            setRematchRequest(true);
+            setRematch(true);
+        }
+        function accetRematch() {
+            setRematch(false);
+            RematchStateUpdate();
         }
 
         if (roomId) {
@@ -146,8 +177,10 @@ export default function useSendGameState() {
         socket.on('setWinner', handleSetWinner);
         socket.on('checkStart', checkStart);
         socket.on('rematch', handleRematch);
+        socket.on('acceptRematch', accetRematch);
 
         return () => {
+            socket.off('acceptRematch', accetRematch);
             socket.off('rematch', handleRematch);
             socket.off('setWinner', handleSetWinner);
             socket.off('changeMotion', handleChangeMotion);
