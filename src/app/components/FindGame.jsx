@@ -53,6 +53,7 @@ export default function FindGame({ handleSetModal }) {
                                         <div key={room} className='room-block'>
                                             <p>
                                                 {room}
+                                                <br />
                                                 <button
                                                     className='button-nav'
                                                     onClick={() =>

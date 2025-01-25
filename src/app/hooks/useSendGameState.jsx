@@ -130,6 +130,9 @@ export default function useSendGameState() {
                 clearTimeout(timeOut);
             }
         }
+        function handleRematch() {
+            setRematchRequest(true);
+        }
 
         if (roomId) {
             socket.emit('sendState', state);
@@ -142,8 +145,10 @@ export default function useSendGameState() {
         socket.on('changeMotion', handleChangeMotion);
         socket.on('setWinner', handleSetWinner);
         socket.on('checkStart', checkStart);
+        socket.on('rematch', handleRematch);
 
         return () => {
+            socket.off('rematch', handleRematch);
             socket.off('setWinner', handleSetWinner);
             socket.off('changeMotion', handleChangeMotion);
             socket.off('setTimer', handeSetTimer);

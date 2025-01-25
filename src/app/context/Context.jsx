@@ -5,7 +5,6 @@ import { socket } from '../components/Room';
 import { FLEET } from '../utils/constants';
 
 export const useStore = create((set, get) => ({
-    gameStart: true,
     playersTurn: null,
     fleet: [...FLEET],
     squares: Array(100).fill(null),
@@ -105,7 +104,9 @@ export const gameState = create((set, get) => ({
     gameId: false,
     motion: null,
     move: false,
+    rematch: false,
     timer: 0,
+    setRematch: (bool) => set({ rematch: bool }),
     setGameId: (id) => set({ gameId: id }),
     setMove: (bool) => set({ move: bool }),
     setTimer: (time) => set({ timer: time }),

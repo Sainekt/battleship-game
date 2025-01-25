@@ -72,6 +72,9 @@ app.prepare().then(() => {
         socket.on('sendState', (gameState) => {
             socket.to(socket.roomId).emit('sendState', gameState);
         });
+        socket.on('rematch', () => {
+            socket.to(socket.roomId).emit('rematch');
+        });
         socket.on('checkStart', (status) => {
             io.to(socket.roomId).emit('checkStart', status);
         });
@@ -92,18 +95,9 @@ app.prepare().then(() => {
         socket.on('updateUserData', () => {
             io.to(socket.roomId).emit('updateUserData');
         });
-
         socket.on('leaveRoom', (username) => {
-            console.log(`User left room: ${username}`);
-            console.log(socket.roomId);
-
-            if (socket.roomId === username) {
-                socket.leave(socket.roomId);
-                socket.to(socket.roomId).emit('leaveRoom', 'admin');
-            } else {
-                socket.leave(socket.roomId);
-                socket.to(socket.roomId).emit('leaveRoom', 'player');
-            }
+            socket.leave(socket.roomId);
+            socket.to(socket.roomId).emit('leaveRoom', username);
         });
 
         socket.on('disconnect', () => {

@@ -1,5 +1,5 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { gameState, userStore, useStore } from '../context/Context';
 
@@ -17,25 +17,24 @@ export default function Createroom() {
         setPlayer2Ready,
         player1,
         player2,
-        winner,
-        boardPlayer1,
-        boardPlayer2,
         game,
+        winner,
+        rematch,
+        setRematch,
     } = gameState((state) => state);
     const { ready, setReady } = useStore((state) => state);
     const { username } = userStore((state) => state);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         socket.on('roomCreated', (room) => {
             setRoomId(room);
             setPlayer1(room);
             setPlayer2(null);
-            console.log(`Room created: ${room} by ${username}`);
         });
 
         socket.on('joinedRoom', (username) => {
             setPlayer2(username);
-            console.log(`Joined room: ${username}`);
             const state = {
                 roomId: roomId,
                 player1: player1,
@@ -49,21 +48,11 @@ export default function Createroom() {
             setRoomId(state.roomId);
         });
 
-        socket.on('roomFull', (id) => {
-            alert(`Room ${id} is full`);
-        });
-        socket.on('notFound', (id) => {
-            return alert(`Room ${id} not found`);
-        });
-        socket.on('alreadyInRoom', (id) => {
-            alert(`You are already in the room ${id}`);
-        });
-
         socket.on('leaveRoom', (player) => {
             if (ready) {
                 setReady();
             }
-            if (player === 'admin') {
+            if (roomId === player) {
                 setPlayer1(null);
                 setPlayer2(null);
                 setRoomId(null);
@@ -85,6 +74,32 @@ export default function Createroom() {
             socket.off('loadState');
         };
     }, [roomId, player2, ready, player1Ready, player2Ready]);
+
+    // error
+    useEffect(() => {
+        let timeoutId;
+        function clearError() {
+            setError(null);
+        }
+
+        function roomFull(id) {
+            setError(`Room ${id} is full`);
+            timeoutId = setTimeout(clearError, 4000);
+        }
+        function roomNotFound(id) {
+            setError(`Room ${id} not found`);
+            timeoutId = setTimeout(clearError, 4000);
+        }
+
+        socket.on('roomFull', roomFull);
+        socket.on('notFound', roomNotFound);
+
+        return () => {
+            socket.off('roomFull', roomFull);
+            socket.off('notFound', roomNotFound);
+            clearTimeout(timeoutId);
+        };
+    }, []);
 
     function handleCreateRoom() {
         socket.emit('createRoom', username);
@@ -109,10 +124,20 @@ export default function Createroom() {
         setRoomId(null);
         socket.emit('leaveRoom', username);
     }
+    function handleRematch() {
+        setRematch(true);
+        socket.emit('rematch');
+    }
 
     return (
         <>
             <h2>Room ID: {roomId || 'No room'}</h2>
+            {error ? <h3 style={{ color: 'red' }}>{error}</h3> : null}
+            {!winner ? (
+                <button onClick={handleRematch} disabled={rematch}>
+                    Rematch
+                </button>
+            ) : null}
             <button onClick={handleCreateRoom} disabled={roomId || !username}>
                 Create Room
             </button>
@@ -120,10 +145,10 @@ export default function Createroom() {
                 join room
             </button>
             <p>
-                Player 1: {player1} {player1Ready ? 'ready' : null}
+                Player 1: {player1} {player1Ready ? 'ready' : null}{' '}
             </p>
             <p>
-                Player 2: {player2} {player2Ready ? 'ready' : null}
+                Player 2: {player2} {player2Ready ? 'ready' : null}{' '}
             </p>
             <button
                 onClick={handleLeaveRoom}

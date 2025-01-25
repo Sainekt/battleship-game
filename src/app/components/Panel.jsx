@@ -16,17 +16,13 @@ export default function Panel() {
         setReady,
         allShipPlaced,
         checkAllShipPlaced,
-        gameStart,
         squares,
-        time,
     } = useStore((state) => state);
     const {
         setMyBoard,
         setPlayer1Ready,
         setPlayer2Ready,
         roomId,
-        setEnemyBoard,
-        player1Ready,
         game,
         player2,
     } = gameState((state) => state);
