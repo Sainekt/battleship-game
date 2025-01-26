@@ -1,10 +1,12 @@
 'use client';
-import useStore from '../context/Context';
 import Square from './Square';
-
+import { gameState, userStore, useStore } from '../context/Context';
+import useSendGameState from '../hooks/useSendGameState';
 export default function Panel() {
+    useSendGameState();
+
     const {
-        fleet1: fleet,
+        fleet,
         setShip,
         ship,
         setSquares,
@@ -14,9 +16,19 @@ export default function Panel() {
         setReady,
         allShipPlaced,
         checkAllShipPlaced,
-        gameStart,
+        squares,
     } = useStore((state) => state);
-    
+    const {
+        setMyBoard,
+        setPlayer1Ready,
+        setPlayer2Ready,
+        roomId,
+        game,
+        player2,
+    } = gameState((state) => state);
+
+    const { username } = userStore((state) => state);
+
     function getSquare(size, have) {
         const squares = [];
 
@@ -54,12 +66,20 @@ export default function Panel() {
         setSquares(Array(100).fill(null));
         setDirection(null);
         reset();
-        checkAllShipPlaced()
+        checkAllShipPlaced();
+        localStorage.removeItem('squares');
+        localStorage.removeItem('fleet');
     }
 
     function handleReady() {
-        if (allShipPlaced && !gameStart) {
-            setReady()
+        if (allShipPlaced && roomId && player2) {
+            setReady();
+            if (username == roomId) {
+                setPlayer1Ready(!ready);
+            } else {
+                setPlayer2Ready(!ready);
+            }
+            setMyBoard(squares);
         }
     }
     return (
@@ -74,8 +94,17 @@ export default function Panel() {
                 );
             })}
             {ready ? <p>you are ready</p> : <p>you are don't ready</p>}
-            <button onClick={handleReset} disabled={ready}>RESET</button>
-            <button onClick={handleReady} disabled={!allShipPlaced}>{ready ? 'UNREADY' : 'READY'}</button>
+            <button onClick={handleReset} disabled={ready}>
+                RESET
+            </button>
+            <button
+                onClick={handleReady}
+                disabled={
+                    allShipPlaced && roomId && player2 && !game ? false : true
+                }
+            >
+                {ready ? 'UNREADY' : 'READY'}
+            </button>
         </>
     );
 }

@@ -1,9 +1,10 @@
+'use client';
 export default function Square({
     value,
     disabled,
     onSquareClick,
     className,
-    text
+    text,
 }) {
     return (
         <button
@@ -11,7 +12,10 @@ export default function Square({
             disabled={disabled}
             onClick={onSquareClick}
             value={value}
-            hidden={true}
-        >{text}</button>
+        >
+            <span hidden={text === 'X' || text === '•' ? false : true}>
+                {text}
+            </span>
+        </button>
     );
 }
