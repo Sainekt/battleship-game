@@ -1,22 +1,27 @@
-'use  client';
 import { create } from 'zustand';
-import { checkLife } from '../utils/utils';
-import { socket } from '../components/Room';
-import { FLEET } from '../utils/constants';
+import Square from '../components/Square';
 
-export const useStore = create((set, get) => ({
-    fleet: [...FLEET],
+const fleet = [
+    { id: 4, size: 4, quantity: 1, type: ['A'] },
+    { id: 3, size: 3, quantity: 2, type: ['B', 'C'] },
+    { id: 2, size: 2, quantity: 3, type: ['D', 'E', 'F'] },
+    { id: 1, size: 1, quantity: 4, type: ['G', 'H', 'I', 'J'] },
+];
+
+const useStore = create((set, get) => ({
+    player1: null,
+    player2: null,
+    gameStart: false,
+    playersTurn: null,
+    fleet1: [...fleet],
+    fleet2: [...fleet],
     squares: Array(100).fill(null),
-    squaresBoard2: Array(100).fill(null),
     ship: null,
     direction: null,
     ready: false,
     allShipPlaced: false,
-    setFleet: (fleet) => set({ fleet }),
-    setSquaresBoard2: (squares) => set({ squaresBoard2: squares }),
 
-    checkAllShipPlaced: () => {
-        const fleet = get().fleet;
+    checkAllShipPlaced: (fleet = get().fleet1) => {
         const count = fleet.reduce((accum, current) => {
             if (!current.quantity && !current.size) {
                 accum++;
@@ -25,7 +30,7 @@ export const useStore = create((set, get) => ({
         }, 0);
         if (count === 4) {
             set({ allShipPlaced: true });
-            return;
+            return
         }
         set({ allShipPlaced: false });
     },
@@ -38,8 +43,8 @@ export const useStore = create((set, get) => ({
             ship: id,
         })),
 
-    sizeDecrement: (newValues) => {
-        const fleet = get().fleet;
+    sizeDecrement: () => {
+        const fleet = get().fleet1;
         const ship = get().ship;
         const shipObjIndex = fleet.findIndex((shipObj) => shipObj.id === +ship);
 
@@ -56,76 +61,22 @@ export const useStore = create((set, get) => ({
                 shipObj.quantity--;
                 shipObj.size = shipObj.quantity ? shipObj.id : 0;
             }
+
             updatedFleet[shipObjIndex] = {
                 ...shipObj,
             };
-
             if (!shipObj.size && !shipObj.quantity > 0) {
-                set({ fleet: updatedFleet, ship: null, direction: null });
+                set({ fleet1: updatedFleet, ship: null, direction: null });
                 get().checkAllShipPlaced(updatedFleet);
-                localStorage.setItem('squares', JSON.stringify(newValues));
-                localStorage.setItem('fleet', JSON.stringify(updatedFleet));
             }
-            set({ fleet: updatedFleet });
-            set({ squares: newValues });
+            set({ fleet1: updatedFleet });
             return true;
         }
         return false;
     },
     reset: () => {
-        set({ ship: null, fleet: [...FLEET] });
+        set({ ship: null, fleet1: [...fleet] });
     },
 }));
 
-export const userStore = create((set, get) => ({
-    id: null,
-    username: null,
-    email: null,
-    games: [],
-    victories: null,
-    avg: null,
-    setId: (id) => set({ id: id }),
-    setEmail: (email) => set({ email: email }),
-    setUsername: (username) => set({ username: username }),
-    setGames: (games) => set({ games: games }),
-    setVictories: (victories) => set({ victories: victories }),
-    setAvg: (avg) => set({ avg: avg }),
-}));
-
-export const gameState = create((set, get) => ({
-    player1: null,
-    player2: null,
-    player1Ready: false,
-    player2Ready: false,
-    myBoard: null,
-    enemyBoard: Array(100).fill(null),
-    winner: null,
-    roomId: null,
-    game: false,
-    gameId: null,
-    motion: null,
-    move: false,
-    timer: 0,
-    setGameId: (id) => set({ gameId: id }),
-    setMove: (bool) => set({ move: bool }),
-    setTimer: (time) => set({ timer: time }),
-    setMotion: (user) => set({ motion: user }),
-    setGame: (bool) => set({ game: bool }),
-    setPlayer1: (id) => set({ player1: id }),
-    setPlayer2: (id) => set({ player2: id }),
-    setPlayer1Ready: (bool) => set({ player1Ready: bool }),
-    setPlayer2Ready: (bool) => set({ player2Ready: bool }),
-    setMyBoard: (board) => set({ myBoard: board }),
-    setEnemyBoard: (board) => set({ enemyBoard: board }),
-    setRoomId: (id) => {
-        set({ roomId: id });
-    },
-    setWinner: (winner) => set({ winner: winner }),
-    checkGame: (board, squares) => {
-        const destroyedShips = checkLife(board, squares);
-        if (destroyedShips.length === 10) {
-            socket.emit('setWinner', get().motion);
-        }
-        return destroyedShips;
-    },
-}));
+export default useStore;
