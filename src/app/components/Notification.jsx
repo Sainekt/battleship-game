@@ -1,17 +1,6 @@
-import { socket } from './Room';
-
-export default function Modal({ handleModal, data, eventAccept, eventReject }) {
-    function closeModal() {
-        handleModal();
-    }
-
-    function handleAccept() {
-        eventAccept();
-        closeModal();
-    }
-    function handleReject() {
-        eventReject();
-        closeModal();
+export default function Notification({ handleNotification, data }) {
+    function closeNotification() {
+        handleNotification();
     }
     const lines = data.text.split('\n');
     return (
@@ -30,15 +19,9 @@ export default function Modal({ handleModal, data, eventAccept, eventReject }) {
                         <div className='modal-footer'>
                             <button
                                 className='accept-btn'
-                                onClick={handleAccept}
+                                onClick={closeNotification}
                             >
-                                Accept
-                            </button>
-                            <button
-                                className='decline-btn'
-                                onClick={handleReject}
-                            >
-                                Decline
+                                OK
                             </button>
                         </div>
                     </div>
