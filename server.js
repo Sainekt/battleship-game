@@ -109,10 +109,9 @@ app.prepare().then(() => {
         });
         socket.on('acceptRematch', () => {
             io.to(socket.roomId).emit('acceptRematch');
-            socket.to(socket.roomId).emit('clearRematch');
         });
         socket.on('rejectRematch', () => {
-            socket.to(socket.roomId).emit('rejectRematch');
+            io.to(socket.roomId).emit('rejectRematch');
         });
     });
 

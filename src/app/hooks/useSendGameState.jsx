@@ -23,6 +23,7 @@ export default function useSendGameState() {
         setMove,
         setWinner,
         setGameId,
+        setRematch,
         setEnemyBoard,
         setMyBoard,
     } = gameState((state) => state);
@@ -58,6 +59,7 @@ export default function useSendGameState() {
         setGameId(null);
         setReady();
         setSquares(squares);
+        setRematch(false);
         setFleet([...FLEET]);
         checkAllShipPlaced();
     }
@@ -155,7 +157,11 @@ export default function useSendGameState() {
                 clearTimeout(timeOut);
             }
         }
-        function acceptRematch() {
+        function handleRematch() {
+            setRematch(true);
+        }
+        function accetRematch() {
+            setRematch(false);
             RematchStateUpdate();
         }
 
@@ -170,10 +176,12 @@ export default function useSendGameState() {
         socket.on('changeMotion', handleChangeMotion);
         socket.on('setWinner', handleSetWinner);
         socket.on('checkStart', checkStart);
-        socket.on('acceptRematch', acceptRematch);
+        socket.on('rematch', handleRematch);
+        socket.on('acceptRematch', accetRematch);
 
         return () => {
-            socket.off('acceptRematch', acceptRematch);
+            socket.off('acceptRematch', accetRematch);
+            socket.off('rematch', handleRematch);
             socket.off('setWinner', handleSetWinner);
             socket.off('changeMotion', handleChangeMotion);
             socket.off('setTimer', handeSetTimer);

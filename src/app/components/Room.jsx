@@ -3,7 +3,6 @@ import { useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { gameState, userStore, useStore } from '../context/Context';
 import Modal from './Modal';
-import Notification from './Notification';
 
 export const socket = io();
 
@@ -21,16 +20,16 @@ export default function Createroom() {
         player2,
         game,
         winner,
+        rematch,
+        setRematch,
     } = gameState((state) => state);
     const { ready, setReady } = useStore((state) => state);
     const { username } = userStore((state) => state);
     const [error, setError] = useState(null);
-    const [rematch, setRematch] = useState(false);
     const [sendRematch, setSendRematch] = useState(false);
     const [rematchTimer, setRematchTimer] = useState(0);
-    const [showNotification, setShowNotification] = useState(false);
     const intervalRef = useRef(null);
-    // room
+
     useEffect(() => {
         socket.on('roomCreated', (room) => {
             setRoomId(room);
@@ -119,36 +118,11 @@ export default function Createroom() {
         intervalRef.current = setInterval(() => {
             setRematchTimer((perv) => perv + 1);
         }, 1000);
-
         return () => {
             clearInterval(intervalRef.current);
             intervalRef.current = null;
         };
     }, [sendRematch]);
-
-    //socket handlers for a rematch
-    useEffect(() => {
-        function handleRejectEvent() {
-            clearInterval(intervalRef.current);
-            setSendRematch(false);
-            setShowNotification(true);
-        }
-        function clearRematch() {
-            clearInterval(intervalRef.current);
-            setSendRematch(false);
-        }
-        function handleRematch() {
-            setRematch(true);
-        }
-        socket.on('rematch', handleRematch);
-        socket.on('clearRematch', clearRematch);
-        socket.on('rejectRematch', handleRejectEvent);
-        return () => {
-            socket.off('rematch', handleRematch);
-            socket.off('clearRematch', clearRematch);
-            socket.off('rejectRematch', handleRejectEvent);
-        };
-    }, []);
 
     function handleCreateRoom() {
         socket.emit('createRoom', username);
@@ -178,16 +152,7 @@ export default function Createroom() {
         setSendRematch(true);
     }
     function handleModal() {
-        setRematch(false);
-    }
-    function acceptRematch() {
-        socket.emit('acceptRematch');
-    }
-    function rejectRematch() {
-        socket.emit('rejectRematch');
-    }
-    function handleShowNotification() {
-        setShowNotification(!showNotification);
+        setRematch(!rematch);
     }
     function getDataForModal() {
         return {
@@ -202,21 +167,12 @@ export default function Createroom() {
     return (
         <>
             <h2>Room ID: {roomId || 'No room'}</h2>
-            {showNotification ? (
-                <Notification
-                    handleNotification={handleShowNotification}
-                    data={{
-                        title: 'Notification',
-                        text: 'Rematch request rejected',
-                    }}
-                />
-            ) : null}
             {rematch ? (
                 <Modal
                     handleModal={handleModal}
                     data={getDataForModal()}
-                    eventAccept={acceptRematch}
-                    eventReject={rejectRematch}
+                    eventAccept={'acceptRematch'}
+                    eventReject={'rejectRematch'}
                 />
             ) : null}
             {error ? <h3 style={{ color: 'red' }}>{error}</h3> : null}

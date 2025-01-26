@@ -6,11 +6,11 @@ export default function Modal({ handleModal, data, eventAccept, eventReject }) {
     }
 
     function handleAccept() {
-        eventAccept();
+        socket.emit(eventAccept);
         closeModal();
     }
     function handleReject() {
-        eventReject();
+        socket.emit(eventReject);
         closeModal();
     }
     const lines = data.text.split('\n');
