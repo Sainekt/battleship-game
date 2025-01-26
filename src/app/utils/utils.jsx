@@ -1,6 +1,7 @@
 // return class style for square
 import { VALID_COORD } from './constants';
 import { FLEET_COUNT } from '../utils/constants';
+import { gameState, useStore } from '../context/Context';
 
 export function getStyle(start = false, disabled = false, ship = false) {
     if (disabled) {
@@ -74,3 +75,5 @@ export async function getTokenInRequest(request) {
             : tokenCookiesOrHeaders;
     return tokenValue.split(' ');
 }
+
+

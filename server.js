@@ -26,6 +26,7 @@ app.prepare().then(() => {
         // }
         console.log(`Connection: ${socket.id}`);
 
+        // room and connect
         socket.on('createRoom', (username) => {
             socket.join(username);
             socket.emit('roomCreated', username);
@@ -57,7 +58,19 @@ app.prepare().then(() => {
             }
             socket.emit('getRoomArray', rooms);
         });
+        socket.on('updateUserData', () => {
+            io.to(socket.roomId).emit('updateUserData');
+        });
+        socket.on('leaveRoom', (username) => {
+            socket.leave(socket.roomId);
+            socket.to(socket.roomId).emit('leaveRoom', username);
+        });
 
+        socket.on('disconnect', () => {
+            console.log(`Disconnected ${socket.id}`);
+        });
+
+        // Game
         socket.on('shot', (shot) => {
             socket.to(socket.roomId).emit('shot', shot);
         });
@@ -71,12 +84,6 @@ app.prepare().then(() => {
 
         socket.on('sendState', (gameState) => {
             socket.to(socket.roomId).emit('sendState', gameState);
-        });
-        socket.on('rematch', () => {
-            socket.to(socket.roomId).emit('rematch');
-        });
-        socket.on('checkStart', (status) => {
-            io.to(socket.roomId).emit('checkStart', status);
         });
         socket.on('setMotion', (users) => {
             const player = users[Math.floor(Math.random() * users.length)];
@@ -92,16 +99,19 @@ app.prepare().then(() => {
         socket.on('setWinner', (winner) => {
             io.to(socket.roomId).emit('setWinner', winner);
         });
-        socket.on('updateUserData', () => {
-            io.to(socket.roomId).emit('updateUserData');
-        });
-        socket.on('leaveRoom', (username) => {
-            socket.leave(socket.roomId);
-            socket.to(socket.roomId).emit('leaveRoom', username);
+        socket.on('checkStart', (status) => {
+            io.to(socket.roomId).emit('checkStart', status);
         });
 
-        socket.on('disconnect', () => {
-            console.log(`Disconnected ${socket.id}`);
+        // Rematch
+        socket.on('rematch', () => {
+            socket.to(socket.roomId).emit('rematch');
+        });
+        socket.on('acceptRematch', () => {
+            io.to(socket.roomId).emit('acceptRematch');
+        });
+        socket.on('rejectRematch', () => {
+            io.to(socket.roomId).emit('rejectRematch');
         });
     });
 

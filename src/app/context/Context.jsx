@@ -5,14 +5,15 @@ import { socket } from '../components/Room';
 import { FLEET } from '../utils/constants';
 
 export const useStore = create((set, get) => ({
-    playersTurn: null,
     fleet: [...FLEET],
     squares: Array(100).fill(null),
+    squaresBoard2: Array(100).fill(null),
     ship: null,
     direction: null,
     ready: false,
     allShipPlaced: false,
     setFleet: (fleet) => set({ fleet }),
+    setSquaresBoard2: (squares) => set({ squaresBoard2: squares }),
 
     checkAllShipPlaced: () => {
         const fleet = get().fleet;
@@ -101,7 +102,7 @@ export const gameState = create((set, get) => ({
     winner: null,
     roomId: null,
     game: false,
-    gameId: false,
+    gameId: null,
     motion: null,
     move: false,
     rematch: false,

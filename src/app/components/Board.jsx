@@ -45,6 +45,8 @@ export default function Board() {
         setSquares,
         ready,
         fleet,
+        squaresBoard2,
+        setSquaresBoard2,
         setFleet,
         ship,
         sizeDecrement,
@@ -52,7 +54,6 @@ export default function Board() {
         setDirection,
         checkAllShipPlaced,
     } = useStore((state) => state);
-    const [squares2, setSquares2] = useState(Array(100).fill(null));
     const {
         checkGame,
         myBoard,
@@ -123,27 +124,25 @@ export default function Board() {
                 setEnemyBoard(newEnemyBoard);
                 setMove(true);
             }
-            setSquares2((values) => {
-                const newValues = [...values];
-                newValues[index] = marker;
+            const newValues = [...squaresBoard2];
+            newValues[index] = marker;
 
-                const destroyShips = checkGame(newEnemyBoard, newValues);
-                if (destroyShips.length) {
-                    const markerMissSquares = markerMiss(destroyShips);
-                    for (const i of markerMissSquares) {
-                        if (!newValues[i]) {
-                            newValues[i] = '•';
-                        }
+            const destroyShips = checkGame(newEnemyBoard, newValues);
+            if (destroyShips.length) {
+                const markerMissSquares = markerMiss(destroyShips);
+                for (const i of markerMissSquares) {
+                    if (!newValues[i]) {
+                        newValues[i] = '•';
                     }
                 }
-                return newValues;
-            });
+            }
+            setSquaresBoard2(newValues);
         }
         socket.on('hitOrMiss', handleHitOrMiss);
         return () => {
             socket.off('hitOrMiss', handleHitOrMiss);
         };
-    }, [squares2, enemyBoard]);
+    }, [squaresBoard2, enemyBoard]);
 
     function handleClickBorad1(event) {
         const index = +event.target.value;
@@ -174,8 +173,8 @@ export default function Board() {
         if (
             !roomId ||
             isNaN(index) ||
-            squares2[index] === 'X' ||
-            squares2[index] === '•'
+            squaresBoard2[index] === 'X' ||
+            squaresBoard2[index] === '•'
         ) {
             return;
         }
@@ -187,7 +186,7 @@ export default function Board() {
     }
 
     const board = getBoard(squares, false, handleClickBorad1);
-    const board2 = getBoard(squares2, !game, handleClickBorad2);
+    const board2 = getBoard(squaresBoard2, !game, handleClickBorad2);
 
     return (
         <div className='board-container'>
