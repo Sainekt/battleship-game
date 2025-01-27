@@ -1,8 +1,7 @@
-// return class style for square
 import { VALID_COORD } from './constants';
 import { FLEET_COUNT } from '../utils/constants';
-import { gameState, useStore } from '../context/Context';
 
+// return class style for square
 export function getStyle(start = false, disabled = false, ship = false) {
     if (disabled) {
         return 'square-disabled square';
@@ -76,4 +75,30 @@ export async function getTokenInRequest(request) {
     return tokenValue.split(' ');
 }
 
+export function setLocalStorageRoomId(roomId) {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + 2);
+    now.setSeconds(now.getSeconds() + 15);
+    localStorage.setItem(
+        'roomId',
+        JSON.stringify({ roomId: roomId, exp: now })
+    );
+}
 
+export function deleteLocalStorageRoomId() {
+    localStorage.removeItem('roomId');
+}
+
+export function checkRoomIdData() {
+    const data = JSON.parse(localStorage.getItem('roomId'));
+    if (!data) {
+        return false;
+    }
+    const exp = new Date(data.exp);
+
+    if (exp > new Date()) {
+        return data.roomId;
+    }
+    localStorage.removeItem('roomId');
+    return false;
+}

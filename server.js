@@ -18,13 +18,17 @@ app.prepare().then(() => {
     });
 
     io.on('connection', (socket) => {
-        // TODO : add reconect
-        // if (socket.recovered) {
-        //     console.log('Client reconnected');
-        // } else {
-        //     console.log('not recinnected');
-        // }
-        console.log(`Connection: ${socket.id}`);
+        console.log(`Connected ${socket.id}`);
+
+        socket.on('joinRoomReconect', ({ roomId, username }) => {
+            const room = io.of('/').adapter.rooms.get(roomId);
+            if (!room) {
+                return socket.emit('notFound', roomId);
+            }
+            socket.roomId = roomId;
+            socket.join(roomId);
+            socket.to(roomId).emit('joinedRoom', username);
+        });
 
         // room and connect
         socket.on('createRoom', (username) => {
@@ -66,8 +70,9 @@ app.prepare().then(() => {
             socket.to(socket.roomId).emit('leaveRoom', username);
         });
 
-        socket.on('disconnect', () => {
+        socket.on('disconnect', (reason) => {
             console.log(`Disconnected ${socket.id}`);
+            socket.disconnect();
         });
 
         // Game

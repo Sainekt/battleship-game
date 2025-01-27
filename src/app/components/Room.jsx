@@ -4,6 +4,7 @@ import { io } from 'socket.io-client';
 import { gameState, userStore, useStore } from '../context/Context';
 import Modal from './Modal';
 import Notification from './Notification';
+import { checkRoomIdData } from '../utils/utils';
 
 export const socket = io();
 
@@ -30,6 +31,16 @@ export default function Createroom() {
     const [rematchTimer, setRematchTimer] = useState(0);
     const [showNotification, setShowNotification] = useState(false);
     const intervalRef = useRef(null);
+
+    // connection
+    useEffect(() => {
+        const roomId = checkRoomIdData();
+        if (!roomId) {
+            return;
+        }
+        socket.emit('joinRoomReconect', { roomId, username });
+    }, [username]);
+
     // room
     useEffect(() => {
         socket.on('roomCreated', (room) => {

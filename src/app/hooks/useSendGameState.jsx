@@ -4,6 +4,10 @@ import { useEffect, useState, useRef } from 'react';
 import { gameState, userStore, useStore } from '../context/Context';
 import { socket } from '../components/Room';
 import { TIME_FOR_MOTION, HEADERS, FLEET } from '../utils/constants';
+import {
+    setLocalStorageRoomId,
+    deleteLocalStorageRoomId,
+} from '../utils/utils';
 
 export default function useSendGameState() {
     const {
@@ -96,6 +100,7 @@ export default function useSendGameState() {
             setMotion(null);
             setTimer(0);
             setGame(false);
+            deleteLocalStorageRoomId();
         }
 
         function handleSetMotion(user) {
@@ -110,6 +115,7 @@ export default function useSendGameState() {
             } else {
                 setMove(false);
             }
+            setLocalStorageRoomId(roomId);
         }
         function handleChangeMotion(motion) {
             if (motion === player1) {
@@ -143,6 +149,7 @@ export default function useSendGameState() {
                             })
                             .then((value) => {
                                 setGameId(value.gameId);
+                                setLocalStorageRoomId(roomId);
                             })
                             .catch((err) => {
                                 console.log(err);
