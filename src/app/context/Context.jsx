@@ -31,8 +31,10 @@ export const useStore = create((set, get) => ({
     },
     setSquares: (value) => set({ squares: value }),
     setDirection: (direction) => set({ direction: direction }),
-    setReady: () => set({ ready: !get().ready }),
-
+    setReady: (bool = undefined) =>
+        typeof bool === 'undefined'
+            ? set({ ready: !get().ready })
+            : set({ ready: bool }),
     setShip: (id) =>
         set(() => ({
             ship: id,

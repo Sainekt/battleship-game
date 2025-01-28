@@ -20,18 +20,23 @@ app.prepare().then(() => {
     io.on('connection', (socket) => {
         console.log(`Connected ${socket.id}`);
 
-        socket.on('joinRoomReconect', ({ roomId, username }) => {
+        socket.on('joinRoomReconnect', ({ roomId, username }) => {
             const room = io.of('/').adapter.rooms.get(roomId);
             if (!room) {
                 return socket.emit('notFound', roomId);
             }
             socket.roomId = roomId;
+            socket.username = username;
             socket.join(roomId);
-            socket.to(roomId).emit('joinedRoom', username);
+            socket.to(socket.roomId).emit('requestGameState');
+        });
+        socket.on('setReconnectState', (state) => {
+            socket.to(socket.roomId).emit('setReconnectState', state);
         });
 
         // room and connect
         socket.on('createRoom', (username) => {
+            socket.username = username;
             socket.join(username);
             socket.emit('roomCreated', username);
             socket.roomId = username;
@@ -48,6 +53,7 @@ app.prepare().then(() => {
             }
             socket.join(roomId);
             socket.roomId = roomId;
+            socket.username = username;
             socket.to(roomId).emit('joinedRoom', username);
         });
         socket.on('getRoomArray', () => {
@@ -72,7 +78,7 @@ app.prepare().then(() => {
 
         socket.on('disconnect', (reason) => {
             console.log(`Disconnected ${socket.id}`);
-            socket.disconnect();
+            socket.to(socket.roomId).emit('playerDisconnect', socket.username);
         });
 
         // Game

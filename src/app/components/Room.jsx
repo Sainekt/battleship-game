@@ -22,24 +22,115 @@ export default function Createroom() {
         player2,
         game,
         winner,
+        gameId,
+        timer,
+        motion,
+        enemyBoard,
+        myBoard,
+        setGameId,
+        setMotion,
+        setTimer,
+        setMyBoard,
     } = gameState((state) => state);
-    const { ready, setReady } = useStore((state) => state);
+    const { ready, setReady, squares, squaresBoard2 } = useStore(
+        (state) => state
+    );
     const { username } = userStore((state) => state);
     const [error, setError] = useState(null);
     const [rematch, setRematch] = useState(false);
     const [sendRematch, setSendRematch] = useState(false);
     const [rematchTimer, setRematchTimer] = useState(0);
     const [showNotification, setShowNotification] = useState(false);
+    const [player1Disconnect, setPlayer1Disconnect] = useState(false);
+    const [player2Disconnect, setPlayer2Disconnect] = useState(false);
     const intervalRef = useRef(null);
 
-    // connection
+    // reconnect
     useEffect(() => {
         const roomId = checkRoomIdData();
-        if (!roomId) {
+        if (!roomId || !username) {
             return;
         }
-        socket.emit('joinRoomReconect', { roomId, username });
+        socket.emit('joinRoomReconnect', { roomId, username });
+        function setReconnectState(state) {
+            setRoomId(state.roomId);
+            setPlayer1(state.player1);
+            setPlayer2(state.player2);
+            setGameId(state.gameId);
+            setMotion(state.motion);
+            setTimer(state.timer);
+            setMyBoard(state.enemyBoard);
+            setPlayer1Ready(true);
+            setPlayer2Ready(true);
+            setReady(true);
+            console.log(state.squares);
+            console.log(state.squaresBoard2);
+        }
+        socket.on('setReconnectState', setReconnectState);
+        return () => {
+            socket.off('setReconnectState', setReconnectState);
+        };
     }, [username]);
+    useEffect(() => {
+        function requestGameState() {
+            if (username === roomId) {
+                setPlayer2Disconnect(false);
+            } else {
+                setPlayer1Disconnect(false);
+            }
+            const state = {
+                roomId,
+                player1,
+                player2,
+                enemyBoard,
+                gameId,
+                motion,
+                timer,
+                squares,
+                squaresBoard2,
+            };
+            socket.emit('setReconnectState', state);
+        }
+        socket.on('requestGameState', requestGameState);
+        return () => {
+            socket.off('requestGameState', requestGameState);
+        };
+    }, [
+        roomId,
+        player1,
+        player2,
+        myBoard,
+        enemyBoard,
+        gameId,
+        motion,
+        timer,
+        username,
+        squares,
+        squaresBoard2,
+    ]);
+
+    // disconnect
+    useEffect(() => {
+        function handleDisconnect(player) {
+            if (game) {
+                if (player === roomId) {
+                    setPlayer1Disconnect(true);
+                } else {
+                    setPlayer2Disconnect(true);
+                }
+            } else {
+                if (player === roomId) {
+                    handleLeaveRoom();
+                } else {
+                    setPlayer2(null);
+                }
+            }
+        }
+        socket.on('playerDisconnect', handleDisconnect);
+        return () => {
+            socket.off('playerDisconnect', handleDisconnect);
+        };
+    }, [roomId, game]);
 
     // room
     useEffect(() => {
@@ -89,7 +180,7 @@ export default function Createroom() {
             socket.off('leaveRoom');
             socket.off('loadState');
         };
-    }, [roomId, player2, ready, player1Ready, player2Ready]);
+    }, [roomId, player2, ready, player1Ready, player2Ready, game]);
 
     // error
     useEffect(() => {
@@ -174,9 +265,7 @@ export default function Createroom() {
     }
 
     function handleLeaveRoom() {
-        if (ready) {
-            setReady();
-        }
+        setReady(false);
         setPlayer1(null);
         setPlayer1Ready(false);
         setPlayer2Ready(false);
@@ -241,9 +330,11 @@ export default function Createroom() {
             </button>
             <p>
                 Player 1: {player1} {player1Ready ? 'ready' : null}{' '}
+                {player1Disconnect ? 'disconnected...' : null}
             </p>
             <p>
                 Player 2: {player2} {player2Ready ? 'ready' : null}{' '}
+                {player2Disconnect ? 'disconnected...' : null}
             </p>
             <button
                 onClick={handleLeaveRoom}
