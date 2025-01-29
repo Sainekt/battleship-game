@@ -1,4 +1,5 @@
 export const HEADERS: HeadersInit = { 'Content-Type': 'application/json' };
+export const CLEAR_BOARD = Array(100).fill(null);
 export const CHAR_LIST: Array<string> = [
     'А',
     'Б',

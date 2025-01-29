@@ -6,7 +6,7 @@ import { socket } from '../components/Room';
 import { TIME_FOR_MOTION, HEADERS, FLEET } from '../utils/constants';
 import {
     setLocalStorageRoomId,
-    deleteLocalStorageRoomId,
+    deleteLocalStorageReconnectData,
 } from '../utils/utils';
 
 export default function useSendGameState() {
@@ -100,7 +100,7 @@ export default function useSendGameState() {
             setMotion(null);
             setTimer(0);
             setGame(false);
-            deleteLocalStorageRoomId();
+            deleteLocalStorageReconnectData();
         }
 
         function handleSetMotion(user) {
@@ -126,6 +126,7 @@ export default function useSendGameState() {
             socket.emit('setTimer', TIME_FOR_MOTION);
         }
         function checkStart(check) {
+            deleteLocalStorageReconnectData();
             let timeOut;
             if (ready && check) {
                 setGame(true);

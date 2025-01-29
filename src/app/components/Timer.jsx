@@ -16,6 +16,7 @@ export default function Timer() {
         setTimer,
         setMove,
         winner,
+        stop,
     } = gameState((state) => state);
     const { username } = userStore((state) => state);
     const timeOutStart = useRef(null);
@@ -48,6 +49,9 @@ export default function Timer() {
         }
 
         function handleStartGame() {
+            if (game) {
+                return;
+            }
             clearTimeout(timeOutStart.current);
             socket.emit('checkStart', true);
         }
@@ -59,7 +63,7 @@ export default function Timer() {
 
     // move timer
     useEffect(() => {
-        if (!game || !motion || winner) {
+        if (!game || !motion || winner || stop) {
             clearTimeout(timeOutGame.current);
             return;
         }
@@ -85,7 +89,7 @@ export default function Timer() {
         return () => {
             clearTimeout(timeOutGame.current);
         };
-    }, [motion, timer, game, winner]);
+    }, [motion, timer, game, winner, stop]);
 
     function getText() {
         if (winner) {

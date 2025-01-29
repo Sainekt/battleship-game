@@ -64,6 +64,7 @@ export default function Board() {
         setEnemyBoard,
         move,
         setMove,
+        stop,
     } = gameState((state) => state);
     const { username } = userStore((state) => state);
     useEffect(() => {
@@ -105,7 +106,7 @@ export default function Board() {
                     }
                 }
             }
-
+            localStorage.setItem('GameSquares', JSON.stringify(newValues));
             setSquares(newValues);
         }
 
@@ -122,6 +123,10 @@ export default function Board() {
                 marker = 'X';
                 newEnemyBoard[index] = hit;
                 setEnemyBoard(newEnemyBoard);
+                localStorage.setItem(
+                    'enemyBoard',
+                    JSON.stringify(newEnemyBoard)
+                );
                 setMove(true);
             }
             const newValues = [...squaresBoard2];
@@ -137,6 +142,7 @@ export default function Board() {
                 }
             }
             setSquaresBoard2(newValues);
+            localStorage.setItem('gameBoard2', JSON.stringify(newValues));
         }
         socket.on('hitOrMiss', handleHitOrMiss);
         return () => {
@@ -186,7 +192,7 @@ export default function Board() {
     }
 
     const board = getBoard(squares, false, handleClickBorad1);
-    const board2 = getBoard(squaresBoard2, !game, handleClickBorad2);
+    const board2 = getBoard(squaresBoard2, !game || stop, handleClickBorad2);
 
     return (
         <div className='board-container'>

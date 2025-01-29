@@ -5,6 +5,7 @@ import { gameState, userStore, useStore } from '../context/Context';
 import Modal from './Modal';
 import Notification from './Notification';
 import { checkRoomIdData } from '../utils/utils';
+import { CLEAR_BOARD } from '../utils/constants';
 
 export const socket = io();
 
@@ -30,9 +31,14 @@ export default function Createroom() {
         setGameId,
         setMotion,
         setTimer,
+        setEnemyBoard,
         setMyBoard,
+        setGame,
+        setMove,
+        stop,
+        setStop,
     } = gameState((state) => state);
-    const { ready, setReady, squares, squaresBoard2 } = useStore(
+    const { ready, setReady, setSquares, setSquaresBoard2 } = useStore(
         (state) => state
     );
     const { username } = userStore((state) => state);
@@ -43,6 +49,7 @@ export default function Createroom() {
     const [showNotification, setShowNotification] = useState(false);
     const [player1Disconnect, setPlayer1Disconnect] = useState(false);
     const [player2Disconnect, setPlayer2Disconnect] = useState(false);
+    const [notificationDisconnect, setNotificationDisconnect] = useState(false);
     const intervalRef = useRef(null);
 
     // reconnect
@@ -58,13 +65,25 @@ export default function Createroom() {
             setPlayer2(state.player2);
             setGameId(state.gameId);
             setMotion(state.motion);
+            if (state.motion === username) {
+                setMove(true);
+            }
             setTimer(state.timer);
-            setMyBoard(state.enemyBoard);
             setPlayer1Ready(true);
             setPlayer2Ready(true);
             setReady(true);
-            console.log(state.squares);
-            console.log(state.squaresBoard2);
+            setGame(true);
+            const squares = JSON.parse(localStorage.getItem('squares'));
+            setMyBoard(squares);
+            setEnemyBoard(
+                JSON.parse(localStorage.getItem('enemyBoard')) || CLEAR_BOARD
+            );
+            setSquares(
+                JSON.parse(localStorage.getItem('GameSquares')) || squares
+            );
+            setSquaresBoard2(
+                JSON.parse(localStorage.getItem('gameBoard2')) || CLEAR_BOARD
+            );
         }
         socket.on('setReconnectState', setReconnectState);
         return () => {
@@ -78,16 +97,15 @@ export default function Createroom() {
             } else {
                 setPlayer1Disconnect(false);
             }
+            setNotificationDisconnect(false);
+            setStop(false);
             const state = {
                 roomId,
                 player1,
                 player2,
-                enemyBoard,
                 gameId,
                 motion,
                 timer,
-                squares,
-                squaresBoard2,
             };
             socket.emit('setReconnectState', state);
         }
@@ -105,8 +123,6 @@ export default function Createroom() {
         motion,
         timer,
         username,
-        squares,
-        squaresBoard2,
     ]);
 
     // disconnect
@@ -118,6 +134,8 @@ export default function Createroom() {
                 } else {
                     setPlayer2Disconnect(true);
                 }
+                setStop(true);
+                setNotificationDisconnect(true);
             } else {
                 if (player === roomId) {
                     handleLeaveRoom();
@@ -286,8 +304,8 @@ export default function Createroom() {
     function rejectRematch() {
         socket.emit('rejectRematch');
     }
-    function handleShowNotification() {
-        setShowNotification(!showNotification);
+    function handleShowNotification(setState, state) {
+        setState(!state);
     }
     function getDataForModal() {
         return {
@@ -302,9 +320,32 @@ export default function Createroom() {
     return (
         <>
             <h2>Room ID: {roomId || 'No room'}</h2>
+            {notificationDisconnect ? (
+                <Notification
+                    handleNotification={() =>
+                        handleShowNotification(
+                            setNotificationDisconnect,
+                            notificationDisconnect
+                        )
+                    }
+                    data={{
+                        title: 'Player Disconnect',
+                        text:
+                            (player1Disconnect
+                                ? `${player1} has been disconnected`
+                                : `${player2} has been disconnected`) +
+                            '\nStay in the game! If he do not reconnect within 2 minutes, you will be awarded the victory!',
+                    }}
+                />
+            ) : null}
             {showNotification ? (
                 <Notification
-                    handleNotification={handleShowNotification}
+                    handleNotification={() =>
+                        handleShowNotification(
+                            setShowNotification,
+                            showNotification
+                        )
+                    }
                     data={{
                         title: 'Notification',
                         text: 'Rematch request rejected',

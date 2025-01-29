@@ -2,12 +2,12 @@
 import { create } from 'zustand';
 import { checkLife } from '../utils/utils';
 import { socket } from '../components/Room';
-import { FLEET } from '../utils/constants';
+import { FLEET, CLEAR_BOARD } from '../utils/constants';
 
 export const useStore = create((set, get) => ({
     fleet: [...FLEET],
-    squares: Array(100).fill(null),
-    squaresBoard2: Array(100).fill(null),
+    squares: CLEAR_BOARD,
+    squaresBoard2: CLEAR_BOARD,
     ship: null,
     direction: null,
     ready: false,
@@ -100,7 +100,7 @@ export const gameState = create((set, get) => ({
     player1Ready: false,
     player2Ready: false,
     myBoard: null,
-    enemyBoard: Array(100).fill(null),
+    enemyBoard: CLEAR_BOARD,
     winner: null,
     roomId: null,
     game: false,
@@ -108,6 +108,8 @@ export const gameState = create((set, get) => ({
     motion: null,
     move: false,
     timer: 0,
+    stop: false,
+    setStop: (bool) => set({ stop: bool }),
     setGameId: (id) => set({ gameId: id }),
     setMove: (bool) => set({ move: bool }),
     setTimer: (time) => set({ timer: time }),

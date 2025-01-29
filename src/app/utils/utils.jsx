@@ -85,8 +85,11 @@ export function setLocalStorageRoomId(roomId) {
     );
 }
 
-export function deleteLocalStorageRoomId() {
+export function deleteLocalStorageReconnectData() {
     localStorage.removeItem('roomId');
+    localStorage.removeItem('GameSquares');
+    localStorage.removeItem('enemyBoard');
+    localStorage.removeItem('gameBoard2');
 }
 
 export function checkRoomIdData() {
@@ -99,6 +102,6 @@ export function checkRoomIdData() {
     if (exp > new Date()) {
         return data.roomId;
     }
-    localStorage.removeItem('roomId');
+    deleteLocalStorageReconnectData();
     return false;
 }
