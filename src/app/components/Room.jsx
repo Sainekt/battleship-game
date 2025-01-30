@@ -6,6 +6,10 @@ import Modal from './Modal';
 import Notification from './Notification';
 import { checkRoomIdData } from '../utils/utils';
 import { CLEAR_BOARD } from '../utils/constants';
+import {
+    deleteLocalStorageReconnectData,
+    getLocalStorageGameData,
+} from '../utils/utils';
 
 export const socket = io();
 
@@ -35,21 +39,21 @@ export default function Createroom() {
         setMyBoard,
         setGame,
         setMove,
-        stop,
         setStop,
+        setEnemyId,
     } = gameState((state) => state);
     const { ready, setReady, setSquares, setSquaresBoard2 } = useStore(
         (state) => state
     );
-    const { username } = userStore((state) => state);
-    const [error, setError] = useState(null);
-    const [rematch, setRematch] = useState(false);
-    const [sendRematch, setSendRematch] = useState(false);
-    const [rematchTimer, setRematchTimer] = useState(0);
-    const [showNotification, setShowNotification] = useState(false);
-    const [player1Disconnect, setPlayer1Disconnect] = useState(false);
-    const [player2Disconnect, setPlayer2Disconnect] = useState(false);
-    const [notificationDisconnect, setNotificationDisconnect] = useState(false);
+    const { username, id } = userStore((state) => state);
+    const [error, setError] = useState(null); // string;
+    const [rematch, setRematch] = useState(false); // bool;
+    const [sendRematch, setSendRematch] = useState(false); // bool;
+    const [roomTimer, setRoomTimer] = useState(0); // number;
+    const [rejected, setRejected] = useState(false); // bool;
+    const [player1Disconnect, setPlayer1Disconnect] = useState(false); // bool;
+    const [player2Disconnect, setPlayer2Disconnect] = useState(false); // bool;
+    const [notification, setNotification] = useState(null); // {};
     const intervalRef = useRef(null);
 
     // reconnect
@@ -63,33 +67,31 @@ export default function Createroom() {
             setRoomId(state.roomId);
             setPlayer1(state.player1);
             setPlayer2(state.player2);
-            setGameId(state.gameId);
             setMotion(state.motion);
             if (state.motion === username) {
                 setMove(true);
             }
             setTimer(state.timer);
+            setEnemyId(state.id);
             setPlayer1Ready(true);
             setPlayer2Ready(true);
             setReady(true);
             setGame(true);
             const squares = JSON.parse(localStorage.getItem('squares'));
+            const gameData = getLocalStorageGameData();
             setMyBoard(squares);
-            setEnemyBoard(
-                JSON.parse(localStorage.getItem('enemyBoard')) || CLEAR_BOARD
-            );
-            setSquares(
-                JSON.parse(localStorage.getItem('GameSquares')) || squares
-            );
-            setSquaresBoard2(
-                JSON.parse(localStorage.getItem('gameBoard2')) || CLEAR_BOARD
-            );
+            setEnemyBoard(gameData['enemyBoard'] || CLEAR_BOARD);
+            setSquares(gameData['GameSquares'] || squares);
+            setSquaresBoard2(gameData['gameBoard2'] || CLEAR_BOARD);
+            setGameId(Number(gameData['gameId']) || null);
         }
         socket.on('setReconnectState', setReconnectState);
         return () => {
             socket.off('setReconnectState', setReconnectState);
         };
     }, [username]);
+
+    // send state for reconnect player
     useEffect(() => {
         function requestGameState() {
             if (username === roomId) {
@@ -97,15 +99,14 @@ export default function Createroom() {
             } else {
                 setPlayer1Disconnect(false);
             }
-            setNotificationDisconnect(false);
             setStop(false);
             const state = {
                 roomId,
                 player1,
                 player2,
-                gameId,
                 motion,
                 timer,
+                id,
             };
             socket.emit('setReconnectState', state);
         }
@@ -123,6 +124,7 @@ export default function Createroom() {
         motion,
         timer,
         username,
+        id,
     ]);
 
     // disconnect
@@ -135,7 +137,10 @@ export default function Createroom() {
                     setPlayer2Disconnect(true);
                 }
                 setStop(true);
-                setNotificationDisconnect(true);
+                setNotification({
+                    title: 'Player Disconnect',
+                    text: `${player} has been disconnected Stay in the game! If he do not reconnect within 2 minutes, you will be awarded the victory!`,
+                });
             } else {
                 if (player === roomId) {
                     handleLeaveRoom();
@@ -149,6 +154,32 @@ export default function Createroom() {
             socket.off('playerDisconnect', handleDisconnect);
         };
     }, [roomId, game]);
+
+    useEffect(() => {
+        clearInterval(intervalRef.current);
+        if (player1Disconnect || player2Disconnect) {
+            setRoomTimer(120);
+            intervalRef.current = setInterval(() => {
+                setRoomTimer((perv) => {
+                    perv -= 1;
+                    if (perv === 0) {
+                        clearInterval(intervalRef.current);
+                        socket.emit('setWinner', {
+                            winnerId: id,
+                            winnerName: username,
+                            gameId,
+                        });
+                    }
+                    return perv;
+                });
+            }, 1000);
+            return;
+        }
+        clearInterval(intervalRef.current);
+        return () => {
+            clearInterval(intervalRef.current);
+        };
+    }, [player1Disconnect, player2Disconnect, id, username, gameId]);
 
     // room
     useEffect(() => {
@@ -171,6 +202,7 @@ export default function Createroom() {
             setPlayer1(state.player1);
             setPlayer2(state.player2);
             setRoomId(state.roomId);
+            deleteLocalStorageReconnectData();
         });
 
         socket.on('leaveRoom', (player) => {
@@ -214,6 +246,7 @@ export default function Createroom() {
         function roomNotFound(id) {
             setError(`Room ${id} not found`);
             timeoutId = setTimeout(clearError, 4000);
+            deleteLocalStorageReconnectData();
         }
 
         socket.on('roomFull', roomFull);
@@ -233,11 +266,11 @@ export default function Createroom() {
             intervalRef.current = null;
         }
         if (!sendRematch) {
-            setRematchTimer(0);
+            setRoomTimer(0);
             return;
         }
         intervalRef.current = setInterval(() => {
-            setRematchTimer((perv) => perv + 1);
+            setRoomTimer((perv) => perv + 1);
         }, 1000);
 
         return () => {
@@ -251,7 +284,11 @@ export default function Createroom() {
         function handleRejectEvent() {
             clearInterval(intervalRef.current);
             setSendRematch(false);
-            setShowNotification(true);
+            setNotification({
+                title: 'Rematch rejected',
+                text: 'Rematch request rejected',
+            });
+            setRejected(true);
         }
         function clearRematch() {
             clearInterval(intervalRef.current);
@@ -270,8 +307,33 @@ export default function Createroom() {
         };
     }, []);
 
+    // show notification Winner
+    useEffect(() => {
+        if (winner) {
+            setNotification({
+                title: 'Winner',
+                text: `${
+                    winner === username ? "You've" : winner
+                } won this game`,
+            });
+        }
+    }, [winner]);
+
     function handleCreateRoom() {
         socket.emit('createRoom', username);
+        deleteLocalStorageReconnectData();
+    }
+
+    function getNotification() {
+        return (
+            <Notification
+                handleNotification={() => handleShowNotification()}
+                data={{
+                    title: notification.title,
+                    text: notification.text,
+                }}
+            ></Notification>
+        );
     }
 
     function handleJoinRoom() {
@@ -304,8 +366,9 @@ export default function Createroom() {
     function rejectRematch() {
         socket.emit('rejectRematch');
     }
-    function handleShowNotification(setState, state) {
-        setState(!state);
+    function handleShowNotification() {
+        setNotification(null);
+        setRejected(false);
     }
     function getDataForModal() {
         return {
@@ -320,38 +383,11 @@ export default function Createroom() {
     return (
         <>
             <h2>Room ID: {roomId || 'No room'}</h2>
-            {notificationDisconnect ? (
-                <Notification
-                    handleNotification={() =>
-                        handleShowNotification(
-                            setNotificationDisconnect,
-                            notificationDisconnect
-                        )
-                    }
-                    data={{
-                        title: 'Player Disconnect',
-                        text:
-                            (player1Disconnect
-                                ? `${player1} has been disconnected`
-                                : `${player2} has been disconnected`) +
-                            '\nStay in the game! If he do not reconnect within 2 minutes, you will be awarded the victory!',
-                    }}
-                />
-            ) : null}
-            {showNotification ? (
-                <Notification
-                    handleNotification={() =>
-                        handleShowNotification(
-                            setShowNotification,
-                            showNotification
-                        )
-                    }
-                    data={{
-                        title: 'Notification',
-                        text: 'Rematch request rejected',
-                    }}
-                />
-            ) : null}
+            {winner && notification ? getNotification() : null}
+            {(player1Disconnect || player2Disconnect) && notification
+                ? getNotification()
+                : null}
+            {rejected && notification ? getNotification() : null}
             {rematch ? (
                 <Modal
                     handleModal={handleModal}
@@ -362,7 +398,7 @@ export default function Createroom() {
             ) : null}
             {error ? <h3 style={{ color: 'red' }}>{error}</h3> : null}
             {winner ? <button onClick={handleRematch}>Rematch</button> : null}
-            {sendRematch ? `Requesting rematch... ${rematchTimer}` : null}
+            {sendRematch ? `Requesting rematch... ${roomTimer}` : null}
             <button onClick={handleCreateRoom} disabled={roomId || !username}>
                 Create Room
             </button>
@@ -371,11 +407,11 @@ export default function Createroom() {
             </button>
             <p>
                 Player 1: {player1} {player1Ready ? 'ready' : null}{' '}
-                {player1Disconnect ? 'disconnected...' : null}
+                {player1Disconnect ? `disconnected... ${roomTimer}` : null}
             </p>
             <p>
                 Player 2: {player2} {player2Ready ? 'ready' : null}{' '}
-                {player2Disconnect ? 'disconnected...' : null}
+                {player2Disconnect ? `disconnected... ${roomTimer}` : null}
             </p>
             <button
                 onClick={handleLeaveRoom}

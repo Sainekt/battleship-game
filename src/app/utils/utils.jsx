@@ -85,11 +85,18 @@ export function setLocalStorageRoomId(roomId) {
     );
 }
 
+export function updateLocalStorageGameData(key, value) {
+    const data = JSON.parse(localStorage.getItem('gameData')) || {};
+    data[key] = value;
+    localStorage.setItem('gameData', JSON.stringify(data));
+}
+export function getLocalStorageGameData() {
+    return JSON.parse(localStorage.getItem('gameData')) || {};
+}
+
 export function deleteLocalStorageReconnectData() {
     localStorage.removeItem('roomId');
-    localStorage.removeItem('GameSquares');
-    localStorage.removeItem('enemyBoard');
-    localStorage.removeItem('gameBoard2');
+    localStorage.removeItem('gameData');
 }
 
 export function checkRoomIdData() {

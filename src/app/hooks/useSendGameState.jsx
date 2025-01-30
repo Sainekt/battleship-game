@@ -3,10 +3,11 @@
 import { useEffect, useState, useRef } from 'react';
 import { gameState, userStore, useStore } from '../context/Context';
 import { socket } from '../components/Room';
-import { TIME_FOR_MOTION, HEADERS, FLEET } from '../utils/constants';
+import { TIME_FOR_MOTION, FLEET, CLEAR_BOARD } from '../utils/constants';
 import {
     setLocalStorageRoomId,
     deleteLocalStorageReconnectData,
+    updateLocalStorageGameData,
 } from '../utils/utils';
 
 export default function useSendGameState() {
@@ -29,9 +30,11 @@ export default function useSendGameState() {
         setGameId,
         setEnemyBoard,
         setMyBoard,
+        enemyId,
+        setEnemyId,
+        myBoard,
     } = gameState((state) => state);
     const { username, id: userId } = userStore((state) => state);
-    const [enemyId, setEnemyId] = useState(null);
     const {
         ready,
         setReady,
@@ -49,10 +52,9 @@ export default function useSendGameState() {
         gameId,
     };
     function RematchStateUpdate() {
-        const squares = Array(100).fill(null);
         setWinner(null);
-        setEnemyBoard(squares);
-        setSquaresBoard2(squares);
+        setEnemyBoard(CLEAR_BOARD);
+        setSquaresBoard2(CLEAR_BOARD);
         setPlayer1Ready(false);
         setPlayer2Ready(false);
         setMyBoard(null);
@@ -61,13 +63,24 @@ export default function useSendGameState() {
         setTimer(0);
         setGameId(null);
         setReady();
-        setSquares(squares);
+        setSquares(CLEAR_BOARD);
         setFleet([...FLEET]);
         checkAllShipPlaced();
     }
+    function gameReset() {
+        setGame(false);
+        setMotion(null);
+        setTimer(0);
+        setGameId(null);
+        setReady(false);
+        setEnemyBoard(CLEAR_BOARD);
+        setSquaresBoard2(CLEAR_BOARD);
+        setPlayer1Ready(false);
+        setPlayer2Ready(false);
+        setSquares(myBoard);
+        checkAllShipPlaced();
+    }
     useEffect(() => {
-        const domain = `${location.protocol}//${location.host}`;
-
         function handleReceivingState(state) {
             if (username === roomId) {
                 setPlayer2Ready(state.player2Ready);
@@ -80,26 +93,12 @@ export default function useSendGameState() {
             }
             console.log(gameId);
         }
-        function handleSetWinner(winner) {
-            if (roomId === username && gameId && !fetchRef.current) {
-                const winnerId = winner === username ? userId : enemyId;
-                const body = {
-                    winner: winnerId,
-                    status: 'finished',
-                    score: 90,
-                };
-                fetchRef.current = fetch(`${domain}/api/games/${gameId}`, {
-                    method: 'PATCH',
-                    body: JSON.stringify(body),
-                }).catch((err) => {
-                    console.error(err);
-                });
-                socket.emit('updateUserData');
-            }
-            setWinner(winner);
+        function handleSetWinner({ winnerName }) {
+            setWinner(winnerName);
             setMotion(null);
             setTimer(0);
             setGame(false);
+            socket.emit('updateUserData');
             deleteLocalStorageReconnectData();
         }
 
@@ -134,29 +133,8 @@ export default function useSendGameState() {
                 if (username === roomId) {
                     socket.emit('setMotion', [player1, player2]);
                     timeOut = setTimeout(() => {
-                        fetch(`${domain}/api/games`, {
-                            method: 'POST',
-                            headers: HEADERS,
-                            body: JSON.stringify({
-                                player_1: player1,
-                                player_2: player2,
-                            }),
-                        })
-                            .then((response) => {
-                                if (response.status !== 201) {
-                                    throw new Error('Game not created');
-                                }
-                                return response.json();
-                            })
-                            .then((value) => {
-                                setGameId(value.gameId);
-                                setLocalStorageRoomId(roomId);
-                            })
-                            .catch((err) => {
-                                console.log(err);
-                                socket.emit('checkStart', false);
-                            });
-                    }, 10000);
+                        socket.emit('createGame', { player1, player2 });
+                    }, 1000);
                 }
             } else {
                 setGame(false);
@@ -165,6 +143,14 @@ export default function useSendGameState() {
         }
         function acceptRematch() {
             RematchStateUpdate();
+        }
+        function setGameIdOrStopGame(gameId) {
+            if (gameId) {
+                setGameId(gameId.gameId);
+                updateLocalStorageGameData('gameId', gameId.gameId);
+                return;
+            }
+            gameReset();
         }
 
         if (roomId) {
@@ -179,8 +165,10 @@ export default function useSendGameState() {
         socket.on('setWinner', handleSetWinner);
         socket.on('checkStart', checkStart);
         socket.on('acceptRematch', acceptRematch);
+        socket.on('setGameId', setGameIdOrStopGame);
 
         return () => {
+            socket.off('setGameId', setGameIdOrStopGame);
             socket.off('acceptRematch', acceptRematch);
             socket.off('setWinner', handleSetWinner);
             socket.off('changeMotion', handleChangeMotion);

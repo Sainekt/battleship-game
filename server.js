@@ -1,12 +1,22 @@
 import { createServer } from 'node:http';
 import next from 'next';
 import { Server } from 'socket.io';
+import pkg from '@next/env';
+const { loadEnvConfig } = pkg;
+const dir = process.cwd();
+loadEnvConfig(dir);
 
 const dev = process.env.NODE_ENV !== 'production';
 const HOSTNAME = '0.0.0.0';
 const PORT = 3000;
 const app = next({ dev, HOSTNAME, PORT });
 const handler = app.getRequestHandler();
+const DOMAIN = process.env.DOMAIN;
+const SYSTEM_TOKEN = process.env.SYSTEM_TOKEN;
+const HEADERS = {
+    'Content-Type': 'application/json',
+    authorization: `Bearer ${SYSTEM_TOKEN}`,
+};
 
 app.prepare().then(() => {
     const httpServer = createServer(handler);
@@ -106,9 +116,29 @@ app.prepare().then(() => {
         socket.on('changeMotion', (motion) => {
             io.to(socket.roomId).emit('changeMotion', motion);
         });
-
-        socket.on('setWinner', (winner) => {
-            io.to(socket.roomId).emit('setWinner', winner);
+        socket.on('createGame', ({ player1, player2 }) => {
+            fetch(`${DOMAIN}/api/games/`, {
+                headers: HEADERS,
+                method: 'POST',
+                body: JSON.stringify({ player_1: player1, player_2: player2 }),
+            })
+                .then(async (response) => {
+                    let data;
+                    if (response.status === 201) {
+                        data = await response.json();
+                    } else {
+                        data = false;
+                    }
+                    io.to(socket.roomId).emit('setGameId', data);
+                })
+                .catch((err) => {
+                    console.log(err);
+                    io.to(socket.roomId).emit('setGameId', false);
+                });
+        });
+        socket.on('setWinner', ({ winnerId, winnerName, gameId }) => {
+            updateGame(gameId, winnerId);
+            io.to(socket.roomId).emit('setWinner', { winnerName });
         });
         socket.on('checkStart', (status) => {
             io.to(socket.roomId).emit('checkStart', status);
@@ -136,3 +166,18 @@ app.prepare().then(() => {
             console.log(`> Ready on http://${HOSTNAME}:${PORT}`);
         });
 });
+
+function updateGame(gameId, winnerId) {
+    const body = {
+        winner: winnerId,
+        status: 'finished',
+        score: 90,
+    };
+    fetch(`${DOMAIN}/api/games/${gameId}`, {
+        headers: HEADERS,
+        method: 'PATCH',
+        body: JSON.stringify(body),
+    }).catch((err) => {
+        console.error(err);
+    });
+}

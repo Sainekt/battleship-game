@@ -97,6 +97,7 @@ export const userStore = create((set, get) => ({
 export const gameState = create((set, get) => ({
     player1: null,
     player2: null,
+    enemyId: null,
     player1Ready: false,
     player2Ready: false,
     myBoard: null,
@@ -117,6 +118,7 @@ export const gameState = create((set, get) => ({
     setGame: (bool) => set({ game: bool }),
     setPlayer1: (id) => set({ player1: id }),
     setPlayer2: (id) => set({ player2: id }),
+    setEnemyId: (number) => set({ enemyId: number }),
     setPlayer1Ready: (bool) => set({ player1Ready: bool }),
     setPlayer2Ready: (bool) => set({ player2Ready: bool }),
     setMyBoard: (board) => set({ myBoard: board }),
@@ -127,9 +129,6 @@ export const gameState = create((set, get) => ({
     setWinner: (winner) => set({ winner: winner }),
     checkGame: (board, squares) => {
         const destroyedShips = checkLife(board, squares);
-        if (destroyedShips.length === 10) {
-            socket.emit('setWinner', get().motion);
-        }
         return destroyedShips;
     },
 }));
