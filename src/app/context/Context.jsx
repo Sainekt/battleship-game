@@ -77,6 +77,11 @@ export const useStore = create((set, get) => ({
     reset: () => {
         set({ ship: null, fleet: [...FLEET] });
     },
+
+    boardsAndReadyReset: () => set({
+        ready: false,
+        squaresBoard2: CLEAR_BOARD,
+    }),
 }));
 
 export const userStore = create((set, get) => ({
@@ -131,4 +136,14 @@ export const gameState = create((set, get) => ({
         const destroyedShips = checkLife(board, squares);
         return destroyedShips;
     },
+    gameStateReset: () =>
+        set({
+            game: false,
+            motion: null,
+            timer: 0,
+            gameId: null,
+            enemyBoard: CLEAR_BOARD,
+            player1Ready: false,
+            player2Ready: false,
+        }),
 }));

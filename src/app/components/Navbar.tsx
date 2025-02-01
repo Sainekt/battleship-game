@@ -10,7 +10,6 @@ import { socket } from '../components/Room';
 
 export default function NavBar() {
     const {
-        id,
         setId,
         username,
         setUsername,
@@ -57,6 +56,10 @@ export default function NavBar() {
     function handleProfile() {
         setProfile(!profile);
     }
+    function handleLogOut() {
+        removeCookieToken();
+        socket.disconnect();
+    }
 
     return (
         <>
@@ -89,7 +92,7 @@ export default function NavBar() {
                 </div>
                 <Link
                     className='logout-btn'
-                    onClick={() => removeCookieToken()}
+                    onClick={handleLogOut}
                     href={'/signin'}
                 >
                     Log Out

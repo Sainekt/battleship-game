@@ -57,3 +57,5 @@ export const VALID_COORD = {
     89: [78, 79, 88, 98, 99],
     99: [88, 89, 98],
 };
+
+export const TIME_FOR_RECONNECT = 120;

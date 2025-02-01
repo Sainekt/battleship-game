@@ -26,7 +26,7 @@ app.prepare().then(() => {
             skipMiddlewares: true,
         },
     });
-
+    const CLOSED_ROOMS = new Set();
     io.on('connection', (socket) => {
         console.log(`Connected ${socket.id}`);
 
@@ -46,6 +46,7 @@ app.prepare().then(() => {
 
         // room and connect
         socket.on('createRoom', (username) => {
+            CLOSED_ROOMS.delete(username);
             socket.username = username;
             socket.join(username);
             socket.emit('roomCreated', username);
@@ -71,8 +72,14 @@ app.prepare().then(() => {
             const roomsIds = roomsMap.keys();
             const sockets = new Set(io.sockets.sockets.keys());
             const rooms = [];
+            console.log(CLOSED_ROOMS);
+
             for (const roomId of roomsIds) {
-                if (!sockets.has(roomId) && roomsMap.get(roomId).size < 2) {
+                if (
+                    !sockets.has(roomId) &&
+                    roomsMap.get(roomId).size < 2 &&
+                    !CLOSED_ROOMS.has(roomId)
+                ) {
                     rooms.push(roomId);
                 }
             }
@@ -138,9 +145,15 @@ app.prepare().then(() => {
         });
         socket.on('setWinner', ({ winnerId, winnerName, gameId }) => {
             updateGame(gameId, winnerId);
+            CLOSED_ROOMS.delete(socket.roomId);
             io.to(socket.roomId).emit('setWinner', { winnerName });
         });
         socket.on('checkStart', (status) => {
+            if (status) {
+                CLOSED_ROOMS.add(socket.roomId);
+            } else {
+                CLOSED_ROOMS.delete(socket.roomId);
+            }
             io.to(socket.roomId).emit('checkStart', status);
         });
 

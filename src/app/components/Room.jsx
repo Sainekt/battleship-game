@@ -5,7 +5,7 @@ import { gameState, userStore, useStore } from '../context/Context';
 import Modal from './Modal';
 import Notification from './Notification';
 import { checkRoomIdData } from '../utils/utils';
-import { CLEAR_BOARD } from '../utils/constants';
+import { CLEAR_BOARD, TIME_FOR_RECONNECT } from '../utils/constants';
 import {
     deleteLocalStorageReconnectData,
     getLocalStorageGameData,
@@ -41,10 +41,15 @@ export default function Createroom() {
         setMove,
         setStop,
         setEnemyId,
+        gameStateReset,
     } = gameState((state) => state);
-    const { ready, setReady, setSquares, setSquaresBoard2 } = useStore(
-        (state) => state
-    );
+    const {
+        ready,
+        setReady,
+        setSquares,
+        setSquaresBoard2,
+        boardsAndReadyReset,
+    } = useStore((state) => state);
     const { username, id } = userStore((state) => state);
     const [error, setError] = useState(null); // string;
     const [rematch, setRematch] = useState(false); // bool;
@@ -139,7 +144,7 @@ export default function Createroom() {
                 setStop(true);
                 setNotification({
                     title: 'Player Disconnect',
-                    text: `${player} has been disconnected Stay in the game! If he do not reconnect within 2 minutes, you will be awarded the victory!`,
+                    text: `${player} has been disconnected Stay in the game! If he do not reconnect within ${TIME_FOR_RECONNECT} seconds, you will be awarded the victory!`,
                 });
             } else {
                 if (player === roomId) {
@@ -158,7 +163,7 @@ export default function Createroom() {
     useEffect(() => {
         clearInterval(intervalRef.current);
         if (player1Disconnect || player2Disconnect) {
-            setRoomTimer(120);
+            setRoomTimer(TIME_FOR_RECONNECT);
             intervalRef.current = setInterval(() => {
                 setRoomTimer((perv) => {
                     perv -= 1;
@@ -213,14 +218,13 @@ export default function Createroom() {
                 setPlayer1(null);
                 setPlayer2(null);
                 setRoomId(null);
-                setPlayer1Ready(false);
-                setPlayer2Ready(false);
                 socket.emit('leaveRoom', username);
             } else {
-                setPlayer1Ready(false);
-                setPlayer2Ready(false);
                 setPlayer2(null);
             }
+            gameStateReset();
+            boardsAndReadyReset();
+            setSquares(myBoard);
         });
 
         return () => {
@@ -230,7 +234,7 @@ export default function Createroom() {
             socket.off('leaveRoom');
             socket.off('loadState');
         };
-    }, [roomId, player2, ready, player1Ready, player2Ready, game]);
+    }, [roomId, player2, ready, player1Ready, player2Ready, game, myBoard]);
 
     // error
     useEffect(() => {
@@ -269,6 +273,7 @@ export default function Createroom() {
             setRoomTimer(0);
             return;
         }
+        setRoomTimer(0);
         intervalRef.current = setInterval(() => {
             setRoomTimer((perv) => perv + 1);
         }, 1000);
@@ -345,12 +350,12 @@ export default function Createroom() {
     }
 
     function handleLeaveRoom() {
-        setReady(false);
         setPlayer1(null);
-        setPlayer1Ready(false);
-        setPlayer2Ready(false);
         setPlayer2(null);
         setRoomId(null);
+        boardsAndReadyReset();
+        gameStateReset();
+        setSquares(myBoard);
         socket.emit('leaveRoom', username);
     }
     function handleRematch() {

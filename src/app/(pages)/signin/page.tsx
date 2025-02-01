@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { setCookieToken } from '../../security/token';
 import { useRouter } from 'next/navigation';
+import { socket } from '../../components/Room';
 
 export default function SignUp() {
     const [username, setUsername] = useState('');
@@ -23,6 +24,7 @@ export default function SignUp() {
         const data = await response.json();
         if (response.status === 201) {
             await setCookieToken(data.token);
+            socket.connect();
             router.push('/');
         }
         setError(data.error);
