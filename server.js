@@ -72,8 +72,6 @@ app.prepare().then(() => {
             const roomsIds = roomsMap.keys();
             const sockets = new Set(io.sockets.sockets.keys());
             const rooms = [];
-            console.log(CLOSED_ROOMS);
-
             for (const roomId of roomsIds) {
                 if (
                     !sockets.has(roomId) &&

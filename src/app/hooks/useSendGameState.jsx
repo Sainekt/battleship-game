@@ -17,6 +17,8 @@ export default function useSendGameState() {
         player2Ready,
         player1,
         player2,
+        setPlayer1,
+        setPlayer2,
         setPlayer1Ready,
         setPlayer2Ready,
         game,
@@ -28,70 +30,55 @@ export default function useSendGameState() {
         setMove,
         setWinner,
         setGameId,
-        setEnemyBoard,
-        setMyBoard,
         enemyId,
         setEnemyId,
         myBoard,
+        gameStateReset,
+        setMyBoard,
     } = gameState((state) => state);
     const { username, id: userId } = userStore((state) => state);
     const {
         ready,
-        setReady,
         setSquares,
-        setFleet,
         checkAllShipPlaced,
-        setSquaresBoard2,
+        boardsAndReadyReset,
+        boardRematchReset,
     } = useStore((state) => state);
     const fetchRef = useRef(null);
 
     const state = {
+        player1,
+        player2,
         player1Ready,
         player2Ready,
         userId,
         gameId,
     };
     function RematchStateUpdate() {
-        setWinner(null);
-        setEnemyBoard(CLEAR_BOARD);
-        setSquaresBoard2(CLEAR_BOARD);
-        setPlayer1Ready(false);
-        setPlayer2Ready(false);
+        gameStateReset();
         setMyBoard(null);
-        setGame(false);
-        setMotion(null);
-        setTimer(0);
-        setGameId(null);
-        setReady();
-        setSquares(CLEAR_BOARD);
-        setFleet([...FLEET]);
+        boardRematchReset();
         checkAllShipPlaced();
     }
     function gameReset() {
-        setGame(false);
-        setMotion(null);
-        setTimer(0);
-        setGameId(null);
-        setReady(false);
-        setEnemyBoard(CLEAR_BOARD);
-        setSquaresBoard2(CLEAR_BOARD);
-        setPlayer1Ready(false);
-        setPlayer2Ready(false);
+        gameStateReset();
+        boardsAndReadyReset();
         setSquares(myBoard);
         checkAllShipPlaced();
     }
     useEffect(() => {
         function handleReceivingState(state) {
             if (username === roomId) {
-                setPlayer2Ready(state.player2Ready);
                 setEnemyId(state.userId);
-                setGameId(gameId || state.gameId);
             } else {
                 setEnemyId(state.userId);
-                setPlayer1Ready(state.player1Ready);
-                setGameId(gameId || state.gameId);
             }
-            console.log(gameId);
+            setGameId(gameId || state.gameId);
+            setGameId(gameId || state.gameId);
+            setPlayer1Ready(state.player1Ready);
+            setPlayer2Ready(state.player2Ready);
+            setPlayer1(state.player1);
+            setPlayer2(state.player2);
         }
         function handleSetWinner({ winnerName }) {
             setWinner(winnerName);

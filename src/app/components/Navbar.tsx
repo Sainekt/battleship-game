@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { removeCookieToken } from '../security/token';
 import { useState, useEffect } from 'react';
-import { userStore } from '../context/Context';
+import { userStore, gameState } from '../context/Context';
 import FindGame from './FindGame';
 import Profile from './Profile';
 import { HEADERS } from '../utils/constants';
@@ -21,6 +21,8 @@ export default function NavBar() {
         avg,
         setAvg,
     } = userStore((state) => state);
+    const { game } = gameState((state) => state);
+
     const [findgame, setFindgame] = useState(false);
     const [profile, setProfile] = useState(false);
 
@@ -78,7 +80,7 @@ export default function NavBar() {
                     <button
                         className='button-nav'
                         onClick={handleFindGame}
-                        disabled={username ? false : true}
+                        disabled={username && !game ? false : true}
                     >
                         Find game
                     </button>

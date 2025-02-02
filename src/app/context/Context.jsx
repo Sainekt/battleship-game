@@ -1,7 +1,6 @@
 'use  client';
 import { create } from 'zustand';
 import { checkLife } from '../utils/utils';
-import { socket } from '../components/Room';
 import { FLEET, CLEAR_BOARD } from '../utils/constants';
 
 export const useStore = create((set, get) => ({
@@ -78,10 +77,19 @@ export const useStore = create((set, get) => ({
         set({ ship: null, fleet: [...FLEET] });
     },
 
-    boardsAndReadyReset: () => set({
-        ready: false,
-        squaresBoard2: CLEAR_BOARD,
-    }),
+    boardsAndReadyReset: () =>
+        set({
+            ready: false,
+            squaresBoard2: CLEAR_BOARD,
+        }),
+
+    boardRematchReset: () =>
+        set({
+            squaresBoard2: CLEAR_BOARD,
+            ready: false,
+            squares: CLEAR_BOARD,
+            fleet: [...FLEET],
+        }),
 }));
 
 export const userStore = create((set, get) => ({
@@ -145,5 +153,6 @@ export const gameState = create((set, get) => ({
             enemyBoard: CLEAR_BOARD,
             player1Ready: false,
             player2Ready: false,
+            winner: null,
         }),
 }));

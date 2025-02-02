@@ -49,6 +49,7 @@ export default function Createroom() {
         setSquares,
         setSquaresBoard2,
         boardsAndReadyReset,
+        squares,
     } = useStore((state) => state);
     const { username, id } = userStore((state) => state);
     const [error, setError] = useState(null); // string;
@@ -224,7 +225,7 @@ export default function Createroom() {
             }
             gameStateReset();
             boardsAndReadyReset();
-            setSquares(myBoard);
+            setSquares(myBoard || squares);
         });
 
         return () => {
@@ -355,7 +356,7 @@ export default function Createroom() {
         setRoomId(null);
         boardsAndReadyReset();
         gameStateReset();
-        setSquares(myBoard);
+        setSquares(myBoard || squares);
         socket.emit('leaveRoom', username);
     }
     function handleRematch() {
