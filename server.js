@@ -62,6 +62,9 @@ app.prepare().then(() => {
             if (room.size >= 2) {
                 return socket.emit('roomFull', roomId);
             }
+            if (socket.roomId) {
+                socket.leave(socket.roomId);
+            }
             socket.join(roomId);
             socket.roomId = roomId;
             socket.username = username;

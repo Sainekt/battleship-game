@@ -56,10 +56,11 @@ export default function Createroom() {
     const [rematch, setRematch] = useState(false); // bool;
     const [sendRematch, setSendRematch] = useState(false); // bool;
     const [roomTimer, setRoomTimer] = useState(0); // number;
-    const [rejected, setRejected] = useState(false); // bool;
     const [player1Disconnect, setPlayer1Disconnect] = useState(false); // bool;
     const [player2Disconnect, setPlayer2Disconnect] = useState(false); // bool;
-    const [notification, setNotification] = useState(null); // {};
+    const [winnerNotification, setWinnerNotification] = useState(false); // bool
+    const [disconnectNotification, setDisconnectNotification] = useState(false); // bool
+    const [rejectedNotification, setRejectedNotification] = useState(false); // bool
     const intervalRef = useRef(null);
 
     // reconnect
@@ -106,6 +107,7 @@ export default function Createroom() {
                 setPlayer1Disconnect(false);
             }
             setStop(false);
+            setDisconnectNotification(false);
             const state = {
                 roomId,
                 player1,
@@ -143,10 +145,7 @@ export default function Createroom() {
                     setPlayer2Disconnect(true);
                 }
                 setStop(true);
-                setNotification({
-                    title: 'Player Disconnect',
-                    text: `${player} has been disconnected Stay in the game! If he do not reconnect within ${TIME_FOR_RECONNECT} seconds, you will be awarded the victory!`,
-                });
+                setDisconnectNotification(true);
             } else {
                 if (player === roomId) {
                     handleLeaveRoom();
@@ -243,13 +242,14 @@ export default function Createroom() {
         function clearError() {
             setError(null);
         }
-
         function roomFull(id) {
             setError(`Room ${id} is full`);
+            clearTimeout(timeoutId);
             timeoutId = setTimeout(clearError, 4000);
         }
         function roomNotFound(id) {
             setError(`Room ${id} not found`);
+            clearTimeout(timeoutId);
             timeoutId = setTimeout(clearError, 4000);
             deleteLocalStorageReconnectData();
         }
@@ -290,11 +290,7 @@ export default function Createroom() {
         function handleRejectEvent() {
             clearInterval(intervalRef.current);
             setSendRematch(false);
-            setNotification({
-                title: 'Rematch rejected',
-                text: 'Rematch request rejected',
-            });
-            setRejected(true);
+            setRejectedNotification(true);
         }
         function clearRematch() {
             clearInterval(intervalRef.current);
@@ -316,30 +312,13 @@ export default function Createroom() {
     // show notification Winner
     useEffect(() => {
         if (winner) {
-            setNotification({
-                title: 'Winner',
-                text: `${
-                    winner === username ? "You've" : winner
-                } won this game`,
-            });
+            setWinnerNotification(true);
         }
     }, [winner]);
 
     function handleCreateRoom() {
         socket.emit('createRoom', username);
         deleteLocalStorageReconnectData();
-    }
-
-    function getNotification() {
-        return (
-            <Notification
-                handleNotification={() => handleShowNotification()}
-                data={{
-                    title: notification.title,
-                    text: notification.text,
-                }}
-            ></Notification>
-        );
     }
 
     function handleJoinRoom() {
@@ -363,46 +342,79 @@ export default function Createroom() {
         socket.emit('rematch');
         setSendRematch(true);
     }
-    function handleModal() {
-        setRematch(false);
-    }
     function acceptRematch() {
         socket.emit('acceptRematch');
+        setRematch(false);
     }
     function rejectRematch() {
         socket.emit('rejectRematch');
-    }
-    function handleShowNotification() {
-        setNotification(null);
-        setRejected(false);
-    }
-    function getDataForModal() {
-        return {
-            title: 'Request for a rematch',
-            text: `Player ${
-                username === player1 ? player2 : player1
-            } offers a rematch\n
-            Do you want to play again?`,
-        };
+        setRematch(false);
     }
 
     return (
         <>
             <h2>Room ID: {roomId || 'No room'}</h2>
-            {winner && notification ? getNotification() : null}
-            {(player1Disconnect || player2Disconnect) && notification
-                ? getNotification()
-                : null}
-            {rejected && notification ? getNotification() : null}
+            {winnerNotification ? (
+                <Notification
+                    handleNotification={() => {
+                        if (player1Disconnect || player2Disconnect) {
+                            setPlayer1Disconnect(false);
+                            setPlayer2Disconnect(false);
+                            setStop(false);
+                            handleLeaveRoom();
+                        }
+                        setWinnerNotification(false);
+                    }}
+                    data={{
+                        title: 'Winner',
+                        text: `${
+                            winner === username ? "You've" : winner
+                        } won this game`,
+                    }}
+                />
+            ) : null}
+            {disconnectNotification ? (
+                <Notification
+                    handleNotification={() => setDisconnectNotification(false)}
+                    data={{
+                        title: 'Player Disconnect',
+                        text: `${
+                            player1Disconnect ? player1 : player2
+                        } has been disconnected Stay in the game!\nIf he do not reconnect within ${TIME_FOR_RECONNECT} seconds, you will be awarded the victory!`,
+                    }}
+                />
+            ) : null}
+            {rejectedNotification ? (
+                <Notification
+                    handleNotification={() => setRejectedNotification(false)}
+                    data={{
+                        title: 'Rematch rejected',
+                        text: 'Rematch request rejected',
+                    }}
+                />
+            ) : null}
             {rematch ? (
                 <Modal
-                    handleModal={handleModal}
-                    data={getDataForModal()}
+                    data={{
+                        title: 'Request for a rematch',
+                        text: `Player ${
+                            username === player1 ? player2 : player1
+                        } offers a rematch\n
+                        Do you want to play again?`,
+                    }}
                     eventAccept={acceptRematch}
                     eventReject={rejectRematch}
                 />
             ) : null}
-            {error ? <h3 style={{ color: 'red' }}>{error}</h3> : null}
+            {error ? (
+                <Notification
+                    handleNotification={() => setError(null)}
+                    data={{
+                        title: 'Error',
+                        text: error,
+                    }}
+                />
+            ) : null}
             {winner ? <button onClick={handleRematch}>Rematch</button> : null}
             {sendRematch ? `Requesting rematch... ${roomTimer}` : null}
             <button onClick={handleCreateRoom} disabled={roomId || !username}>

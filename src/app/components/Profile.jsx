@@ -51,7 +51,11 @@ export default function Profile({ handleSetModal }) {
     }
     return (
         <>
-            <div className='modal' tabIndex='-1' onClick={closeModal}>
+            <div
+                className='modal modal-navbar'
+                tabIndex='-1'
+                onClick={closeModal}
+            >
                 <div className='modal-dialog' onClick={handeDialog}>
                     <div className='modal-content'>
                         <div className='modal-header'>

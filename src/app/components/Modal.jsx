@@ -1,17 +1,11 @@
 import { socket } from './Room';
 
-export default function Modal({ handleModal, data, eventAccept, eventReject }) {
-    function closeModal() {
-        handleModal();
-    }
-
+export default function Modal({ data, eventAccept, eventReject }) {
     function handleAccept() {
         eventAccept();
-        closeModal();
     }
     function handleReject() {
         eventReject();
-        closeModal();
     }
     const lines = data.text.split('\n');
     return (

@@ -121,6 +121,10 @@
   overflow: hidden; /* Блокируем прокрутку основного окна */
 }
 
+.modal-navbar {
+  z-index: 990;
+}
+
 .modal-dialog {
   background-color: white; /* Цвет фона модального окна */
   border-radius: 8px; /* Закругленные углы */
