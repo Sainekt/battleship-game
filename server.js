@@ -52,7 +52,23 @@ app.prepare().then(() => {
             socket.emit('roomCreated', username);
             socket.roomId = username;
         });
+        socket.on('checkRoom', (roomId, username) => {
+            const room = io.of('/').adapter.rooms.get(roomId);
+            if (!room) {
+                return socket.emit('notFound', roomId);
+            }
+            if (room.size >= 2) {
+                return socket.emit('roomFull', roomId);
+            }
+            socket.to(roomId).emit('checkRoom', username, socket.id);
+        });
 
+        socket.on('rejectJoin', (socketId) => {
+            socket.to(socketId).emit('rejectJoin');
+        });
+        socket.on('acceptJoin', (socketId, roomId) => {
+            socket.to(socketId).emit('acceptJoin', roomId);
+        });
         socket.on('joinRoom', (roomId, username) => {
             const room = io.of('/').adapter.rooms.get(roomId);
             if (!room) {
@@ -92,6 +108,9 @@ app.prepare().then(() => {
         socket.on('leaveRoom', (username) => {
             socket.leave(socket.roomId);
             socket.to(socket.roomId).emit('leaveRoom', username);
+        });
+        socket.on('kick', () => {
+            socket.to(socket.roomId).emit('kick');
         });
 
         socket.on('disconnect', (reason) => {

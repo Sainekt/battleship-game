@@ -9,7 +9,7 @@ export default function FindGame({ handleSetModal }) {
     const [modal, setModal] = useState(false);
     const [changeRoom, setChangeRoom] = useState(null);
     const { username } = userStore((state) => state);
-    const { roomId } = gameState((state) => state);
+    const { roomId, setRoomId } = gameState((state) => state);
 
     function closeModal() {
         handleSetModal();
@@ -23,12 +23,13 @@ export default function FindGame({ handleSetModal }) {
             setChangeRoom(connectRoomId);
             return;
         }
-        socket.emit('joinRoom', connectRoomId, username);
+        socket.emit('checkRoom', connectRoomId, username);
     }
 
     function handleAcceptChangeRoom() {
         socket.emit('leaveRoom', username);
-        socket.emit('joinRoom', changeRoom, username);
+        setRoomId(null);
+        socket.emit('checkRoom', changeRoom, username);
         setModal(false);
     }
 

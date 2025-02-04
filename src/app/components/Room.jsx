@@ -51,7 +51,9 @@ export default function Createroom() {
         boardsAndReadyReset,
         squares,
     } = useStore((state) => state);
-    const { username, id } = userStore((state) => state);
+    const { username, id, kickedPlayers, setKickedPlayers } = userStore(
+        (state) => state
+    );
     const [error, setError] = useState(null); // string;
     const [rematch, setRematch] = useState(false); // bool;
     const [sendRematch, setSendRematch] = useState(false); // bool;
@@ -61,6 +63,8 @@ export default function Createroom() {
     const [winnerNotification, setWinnerNotification] = useState(false); // bool
     const [disconnectNotification, setDisconnectNotification] = useState(false); // bool
     const [rejectedNotification, setRejectedNotification] = useState(false); // bool
+    const [kickModal, setKickModal] = useState(false); // bool
+    const [kickNotification, setKickNotification] = useState(false); // bool
     const intervalRef = useRef(null);
 
     // reconnect
@@ -188,13 +192,13 @@ export default function Createroom() {
 
     // room
     useEffect(() => {
-        socket.on('roomCreated', (room) => {
+        function handleRoomCreated(room) {
             setRoomId(room);
             setPlayer1(room);
             setPlayer2(null);
-        });
+        }
 
-        socket.on('joinedRoom', (username) => {
+        function handleJoinedRoom(username) {
             setPlayer2(username);
             const state = {
                 roomId: roomId,
@@ -202,15 +206,15 @@ export default function Createroom() {
                 player2: username,
             };
             socket.emit('updateState', state);
-        });
-        socket.on('loadState', (state) => {
+        }
+        function handleLoadState(state) {
             setPlayer1(state.player1);
             setPlayer2(state.player2);
             setRoomId(state.roomId);
             deleteLocalStorageReconnectData();
-        });
+        }
 
-        socket.on('leaveRoom', (player) => {
+        function listenerLeaveRoom(player) {
             if (ready) {
                 setReady();
             }
@@ -225,16 +229,59 @@ export default function Createroom() {
             gameStateReset();
             boardsAndReadyReset();
             setSquares(myBoard || squares);
-        });
-
+        }
+        socket.on('loadState', handleLoadState);
+        socket.on('leaveRoom', listenerLeaveRoom);
+        socket.on('joinedRoom', handleJoinedRoom);
+        socket.on('roomCreated', handleRoomCreated);
         return () => {
-            socket.off('roomCreated');
-            socket.off('joinedRoom');
-            socket.off('roomFull');
-            socket.off('leaveRoom');
-            socket.off('loadState');
+            socket.off('roomCreated', handleRoomCreated);
+            socket.off('joinedRoom', handleJoinedRoom);
+            socket.off('leaveRoom', listenerLeaveRoom);
+            socket.off('loadState', handleLoadState);
         };
-    }, [roomId, player2, ready, player1Ready, player2Ready, game, myBoard]);
+    }, [
+        roomId,
+        player2,
+        ready,
+        player1Ready,
+        player2Ready,
+        game,
+        myBoard,
+        kickedPlayers,
+        username,
+    ]);
+
+    useEffect(() => {
+        function handleKick() {
+            setKickNotification(true);
+            handleLeaveRoom();
+        }
+
+        function handleCheckRoom(username, socketId) {
+            if (kickedPlayers.has(username)) {
+                socket.emit('rejectJoin', socketId);
+                return;
+            }
+            socket.emit('acceptJoin', socketId, roomId);
+        }
+        function handleAcceptJoin(roomId) {
+            socket.emit('joinRoom', roomId, username);
+        }
+        function handleRejectJoin() {
+            setKickNotification(true);
+        }
+        socket.on('checkRoom', handleCheckRoom);
+        socket.on('acceptJoin', handleAcceptJoin);
+        socket.on('rejectJoin', handleRejectJoin);
+        socket.on('kick', handleKick);
+        return () => {
+            socket.off('checkRoom', handleCheckRoom);
+            socket.off('acceptJoin', handleAcceptJoin);
+            socket.off('rejectJoin', handleRejectJoin);
+            socket.off('kick', handleKick);
+        };
+    }, [username, roomId]);
 
     // error
     useEffect(() => {
@@ -315,7 +362,7 @@ export default function Createroom() {
             setWinnerNotification(true);
         }
     }, [winner]);
-
+    // room
     function handleCreateRoom() {
         socket.emit('createRoom', username);
         deleteLocalStorageReconnectData();
@@ -326,7 +373,7 @@ export default function Createroom() {
         if (!roomId) {
             return;
         }
-        socket.emit('joinRoom', roomId, username);
+        socket.emit('checkRoom', roomId, username);
     }
 
     function handleLeaveRoom() {
@@ -338,6 +385,8 @@ export default function Createroom() {
         setSquares(myBoard || squares);
         socket.emit('leaveRoom', username);
     }
+
+    // rematch
     function handleRematch() {
         socket.emit('rematch');
         setSendRematch(true);
@@ -350,7 +399,12 @@ export default function Createroom() {
         socket.emit('rejectRematch');
         setRematch(false);
     }
-
+    //  kick player
+    function acceptKick() {
+        setKickedPlayers(player2);
+        socket.emit('kick');
+        setKickModal(false);
+    }
     return (
         <>
             <h2>Room ID: {roomId || 'No room'}</h2>
@@ -380,7 +434,8 @@ export default function Createroom() {
                         title: 'Player Disconnect',
                         text: `${
                             player1Disconnect ? player1 : player2
-                        } has been disconnected Stay in the game!\nIf he do not reconnect within ${TIME_FOR_RECONNECT} seconds, you will be awarded the victory!`,
+                        } has been disconnected Stay in the game!\nIf he do not reconnect within ${TIME_FOR_RECONNECT} 
+                        seconds, you will be awarded the victory!`,
                     }}
                 />
             ) : null}
@@ -404,6 +459,27 @@ export default function Createroom() {
                     }}
                     eventAccept={acceptRematch}
                     eventReject={rejectRematch}
+                />
+            ) : null}
+            {kickModal ? (
+                <Modal
+                    data={{
+                        title: 'Kick player',
+                        text: `Do you really want to exclude ${player2} from the room?\n
+                            If you confirm, the player will not be able to join you until you refresh the page.`,
+                    }}
+                    eventAccept={acceptKick}
+                    eventReject={() => setKickModal(false)}
+                />
+            ) : null}
+            {kickNotification ? (
+                <Notification
+                    handleNotification={() => setKickNotification(false)}
+                    data={{
+                        title: 'Kicked',
+                        text: `You have been excluded from the room by the room owner. \n
+                        You will be able to join this room again after the owner refreshes the page.`,
+                    }}
                 />
             ) : null}
             {error ? (
@@ -430,6 +506,9 @@ export default function Createroom() {
             <p>
                 Player 2: {player2} {player2Ready ? 'ready' : null}{' '}
                 {player2Disconnect ? `disconnected... ${roomTimer}` : null}
+                {username === player1 && !game && player2 ? (
+                    <button onClick={() => setKickModal(true)}>Kick</button>
+                ) : null}
             </p>
             <button
                 onClick={handleLeaveRoom}
