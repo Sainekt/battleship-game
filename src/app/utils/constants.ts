@@ -1,4 +1,5 @@
 export const HEADERS: HeadersInit = { 'Content-Type': 'application/json' };
+export const CLEAR_BOARD = Array(100).fill(null);
 export const CHAR_LIST: Array<string> = [
     'А',
     'Б',
@@ -56,3 +57,5 @@ export const VALID_COORD = {
     89: [78, 79, 88, 98, 99],
     99: [88, 89, 98],
 };
+
+export const TIME_FOR_RECONNECT = 120;

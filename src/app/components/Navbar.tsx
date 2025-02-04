@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { removeCookieToken } from '../security/token';
 import { useState, useEffect } from 'react';
-import { userStore } from '../context/Context';
+import { userStore, gameState } from '../context/Context';
 import FindGame from './FindGame';
 import Profile from './Profile';
 import { HEADERS } from '../utils/constants';
@@ -10,7 +10,6 @@ import { socket } from '../components/Room';
 
 export default function NavBar() {
     const {
-        id,
         setId,
         username,
         setUsername,
@@ -22,6 +21,8 @@ export default function NavBar() {
         avg,
         setAvg,
     } = userStore((state) => state);
+    const { game } = gameState((state) => state);
+
     const [findgame, setFindgame] = useState(false);
     const [profile, setProfile] = useState(false);
 
@@ -57,6 +58,10 @@ export default function NavBar() {
     function handleProfile() {
         setProfile(!profile);
     }
+    function handleLogOut() {
+        removeCookieToken();
+        socket.disconnect();
+    }
 
     return (
         <>
@@ -75,7 +80,7 @@ export default function NavBar() {
                     <button
                         className='button-nav'
                         onClick={handleFindGame}
-                        disabled={username ? false : true}
+                        disabled={username && !game ? false : true}
                     >
                         Find game
                     </button>
@@ -89,7 +94,7 @@ export default function NavBar() {
                 </div>
                 <Link
                     className='logout-btn'
-                    onClick={() => removeCookieToken()}
+                    onClick={handleLogOut}
                     href={'/signin'}
                 >
                     Log Out

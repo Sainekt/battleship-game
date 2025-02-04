@@ -1,15 +1,18 @@
 'use client';
 import Square from './Square';
-import { useState, useEffect } from 'react';
-import { getStyle, markerMiss } from '../utils/utils';
+import { useEffect } from 'react';
+import {
+    getStyle,
+    markerMiss,
+    updateLocalStorageGameData,
+} from '../utils/utils';
 import {
     validatePlace,
     getValidLocalStorageBoard,
 } from '../utils/validatorsClient';
 import { gameState, userStore, useStore } from '../context/Context';
 import { socket } from './Room';
-import { CHAR_LIST } from '../utils/constants';
-import { TIME_FOR_MOTION } from '../utils/constants';
+import { TIME_FOR_MOTION, CHAR_LIST } from '../utils/constants';
 
 function getBoard(squares, disabled = false, handleClick, start = false) {
     const rows = [];
@@ -60,12 +63,14 @@ export default function Board() {
         enemyBoard,
         roomId,
         game,
+        gameId,
         motion,
         setEnemyBoard,
         move,
         setMove,
+        stop,
     } = gameState((state) => state);
-    const { username } = userStore((state) => state);
+    const { id, username } = userStore((state) => state);
     useEffect(() => {
         // get data in local storage
         const { storageSquares, storageFleet } = getValidLocalStorageBoard();
@@ -105,7 +110,7 @@ export default function Board() {
                     }
                 }
             }
-
+            updateLocalStorageGameData('GameSquares', newValues);
             setSquares(newValues);
         }
 
@@ -122,12 +127,20 @@ export default function Board() {
                 marker = 'X';
                 newEnemyBoard[index] = hit;
                 setEnemyBoard(newEnemyBoard);
+                updateLocalStorageGameData('enemyBoard', newEnemyBoard);
                 setMove(true);
             }
             const newValues = [...squaresBoard2];
             newValues[index] = marker;
 
             const destroyShips = checkGame(newEnemyBoard, newValues);
+            if (destroyShips.length === 10) {
+                socket.emit('setWinner', {
+                    winnerId: id,
+                    winnerName: username,
+                    gameId,
+                });
+            }
             if (destroyShips.length) {
                 const markerMissSquares = markerMiss(destroyShips);
                 for (const i of markerMissSquares) {
@@ -137,12 +150,13 @@ export default function Board() {
                 }
             }
             setSquaresBoard2(newValues);
+            updateLocalStorageGameData('gameBoard2', newValues);
         }
         socket.on('hitOrMiss', handleHitOrMiss);
         return () => {
             socket.off('hitOrMiss', handleHitOrMiss);
         };
-    }, [squaresBoard2, enemyBoard]);
+    }, [squaresBoard2, enemyBoard, id, username, gameId]);
 
     function handleClickBorad1(event) {
         const index = +event.target.value;
@@ -186,7 +200,7 @@ export default function Board() {
     }
 
     const board = getBoard(squares, false, handleClickBorad1);
-    const board2 = getBoard(squaresBoard2, !game, handleClickBorad2);
+    const board2 = getBoard(squaresBoard2, !game || stop, handleClickBorad2);
 
     return (
         <div className='board-container'>

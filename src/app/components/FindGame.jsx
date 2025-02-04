@@ -1,20 +1,41 @@
 'use client';
+import Modal from './Modal';
 import { socket } from './Room';
 import { useEffect, useState } from 'react';
-import { userStore } from '../context/Context';
+import { userStore, gameState } from '../context/Context';
 
 export default function FindGame({ handleSetModal }) {
     const [rooms, setRooms] = useState(null);
+    const [modal, setModal] = useState(false);
+    const [changeRoom, setChangeRoom] = useState(null);
     const { username } = userStore((state) => state);
+    const { roomId } = gameState((state) => state);
+
     function closeModal() {
         handleSetModal();
     }
     function handeDialog(event) {
         event.stopPropagation();
     }
-    function handleJoinRoom(roomId) {
-        socket.emit('joinRoom', roomId, username);
+    function handleJoinRoom(connectRoomId) {
+        if (roomId) {
+            setModal(true);
+            setChangeRoom(connectRoomId);
+            return;
+        }
+        socket.emit('joinRoom', connectRoomId, username);
     }
+
+    function handleAcceptChangeRoom() {
+        socket.emit('leaveRoom', username);
+        socket.emit('joinRoom', changeRoom, username);
+        setModal(false);
+    }
+
+    function handleRejectChangeRoom() {
+        setModal(false);
+    }
+    // request rooms array
     useEffect(() => {
         const interval = setInterval(() => {
             socket.emit('getRoomArray');
@@ -38,7 +59,22 @@ export default function FindGame({ handleSetModal }) {
 
     return (
         <>
-            <div className='modal' tabIndex='-1' onClick={closeModal}>
+            {modal ? (
+                <Modal
+                    data={{
+                        title: 'Room already joined',
+                        text: `You are already in the room: ${roomId}.
+                              \nAre you sure you want to leave the current room and move to another one ?`,
+                    }}
+                    eventAccept={handleAcceptChangeRoom}
+                    eventReject={handleRejectChangeRoom}
+                />
+            ) : null}
+            <div
+                className='modal modal-navbar'
+                tabIndex='-1'
+                onClick={closeModal}
+            >
                 <div className='modal-dialog' onClick={handeDialog}>
                     <div className='modal-content'>
                         <div className='modal-header'>

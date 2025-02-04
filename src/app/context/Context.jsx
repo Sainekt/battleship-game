@@ -1,13 +1,12 @@
 'use  client';
 import { create } from 'zustand';
 import { checkLife } from '../utils/utils';
-import { socket } from '../components/Room';
-import { FLEET } from '../utils/constants';
+import { FLEET, CLEAR_BOARD } from '../utils/constants';
 
 export const useStore = create((set, get) => ({
     fleet: [...FLEET],
-    squares: Array(100).fill(null),
-    squaresBoard2: Array(100).fill(null),
+    squares: CLEAR_BOARD,
+    squaresBoard2: CLEAR_BOARD,
     ship: null,
     direction: null,
     ready: false,
@@ -31,8 +30,10 @@ export const useStore = create((set, get) => ({
     },
     setSquares: (value) => set({ squares: value }),
     setDirection: (direction) => set({ direction: direction }),
-    setReady: () => set({ ready: !get().ready }),
-
+    setReady: (bool = undefined) =>
+        typeof bool === 'undefined'
+            ? set({ ready: !get().ready })
+            : set({ ready: bool }),
     setShip: (id) =>
         set(() => ({
             ship: id,
@@ -75,6 +76,20 @@ export const useStore = create((set, get) => ({
     reset: () => {
         set({ ship: null, fleet: [...FLEET] });
     },
+
+    boardsAndReadyReset: () =>
+        set({
+            ready: false,
+            squaresBoard2: CLEAR_BOARD,
+        }),
+
+    boardRematchReset: () =>
+        set({
+            squaresBoard2: CLEAR_BOARD,
+            ready: false,
+            squares: CLEAR_BOARD,
+            fleet: [...FLEET],
+        }),
 }));
 
 export const userStore = create((set, get) => ({
@@ -95,10 +110,11 @@ export const userStore = create((set, get) => ({
 export const gameState = create((set, get) => ({
     player1: null,
     player2: null,
+    enemyId: null,
     player1Ready: false,
     player2Ready: false,
     myBoard: null,
-    enemyBoard: Array(100).fill(null),
+    enemyBoard: CLEAR_BOARD,
     winner: null,
     roomId: null,
     game: false,
@@ -106,6 +122,8 @@ export const gameState = create((set, get) => ({
     motion: null,
     move: false,
     timer: 0,
+    stop: false,
+    setStop: (bool) => set({ stop: bool }),
     setGameId: (id) => set({ gameId: id }),
     setMove: (bool) => set({ move: bool }),
     setTimer: (time) => set({ timer: time }),
@@ -113,6 +131,7 @@ export const gameState = create((set, get) => ({
     setGame: (bool) => set({ game: bool }),
     setPlayer1: (id) => set({ player1: id }),
     setPlayer2: (id) => set({ player2: id }),
+    setEnemyId: (number) => set({ enemyId: number }),
     setPlayer1Ready: (bool) => set({ player1Ready: bool }),
     setPlayer2Ready: (bool) => set({ player2Ready: bool }),
     setMyBoard: (board) => set({ myBoard: board }),
@@ -123,9 +142,17 @@ export const gameState = create((set, get) => ({
     setWinner: (winner) => set({ winner: winner }),
     checkGame: (board, squares) => {
         const destroyedShips = checkLife(board, squares);
-        if (destroyedShips.length === 10) {
-            socket.emit('setWinner', get().motion);
-        }
         return destroyedShips;
     },
+    gameStateReset: () =>
+        set({
+            game: false,
+            motion: null,
+            timer: 0,
+            gameId: null,
+            enemyBoard: CLEAR_BOARD,
+            player1Ready: false,
+            player2Ready: false,
+            winner: null,
+        }),
 }));

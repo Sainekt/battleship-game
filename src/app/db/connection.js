@@ -1,7 +1,6 @@
 'use server';
 import mysql from 'mysql2';
 import { hashPassword } from '../security/password.js';
-import { error } from 'console';
 
 const connection = mysql.createConnection({
     host: process.env.DB_HOST,
