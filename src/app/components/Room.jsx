@@ -130,9 +130,6 @@ export default function Createroom() {
         roomId,
         player1,
         player2,
-        myBoard,
-        enemyBoard,
-        gameId,
         motion,
         timer,
         username,
@@ -244,11 +241,7 @@ export default function Createroom() {
         roomId,
         player2,
         ready,
-        player1Ready,
-        player2Ready,
-        game,
         myBoard,
-        kickedPlayers,
         username,
     ]);
 
