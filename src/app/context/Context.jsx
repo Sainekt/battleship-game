@@ -99,6 +99,9 @@ export const userStore = create((set, get) => ({
     games: [],
     victories: null,
     avg: null,
+    kickedPlayers: new Set(),
+    setKickedPlayers: (player) =>
+        set({ kickedPlayers: get().kickedPlayers.add(player) }),
     setId: (id) => set({ id: id }),
     setEmail: (email) => set({ email: email }),
     setUsername: (username) => set({ username: username }),

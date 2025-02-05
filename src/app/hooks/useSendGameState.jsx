@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect } from 'react';
 import { gameState, userStore, useStore } from '../context/Context';
 import { socket } from '../components/Room';
 import { TIME_FOR_MOTION, FLEET, CLEAR_BOARD } from '../utils/constants';
@@ -44,8 +44,6 @@ export default function useSendGameState() {
         boardsAndReadyReset,
         boardRematchReset,
     } = useStore((state) => state);
-    const fetchRef = useRef(null);
-
     const state = {
         player1,
         player2,
