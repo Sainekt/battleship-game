@@ -126,15 +126,7 @@ export default function Createroom() {
         return () => {
             socket.off('requestGameState', requestGameState);
         };
-    }, [
-        roomId,
-        player1,
-        player2,
-        motion,
-        timer,
-        username,
-        id,
-    ]);
+    }, [roomId, player1, player2, motion, timer, username, id]);
 
     // disconnect
     useEffect(() => {
@@ -237,13 +229,7 @@ export default function Createroom() {
             socket.off('leaveRoom', listenerLeaveRoom);
             socket.off('loadState', handleLoadState);
         };
-    }, [
-        roomId,
-        player2,
-        ready,
-        myBoard,
-        username,
-    ]);
+    }, [roomId, player2, ready, myBoard, username]);
 
     useEffect(() => {
         function handleKick() {
@@ -252,7 +238,7 @@ export default function Createroom() {
         }
 
         function handleCheckRoom(username, socketId) {
-            if (kickedPlayers.has(username)) {
+            if (kickedPlayers.has(username) || game) {
                 socket.emit('rejectJoin', socketId);
                 return;
             }
@@ -274,7 +260,7 @@ export default function Createroom() {
             socket.off('rejectJoin', handleRejectJoin);
             socket.off('kick', handleKick);
         };
-    }, [username, roomId]);
+    }, [username, roomId, game]);
 
     // error
     useEffect(() => {
