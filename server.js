@@ -180,6 +180,21 @@ app.prepare().then(() => {
                     io.to(socket.roomId).emit('setGameId', false);
                 });
         });
+        socket.on('checkWinnerState', ({ opponentName, squares }) => {
+            const opponentStartSquares = PlayersBoards[opponentName];
+            testSquares(opponentStartSquares, squares).then((bool) => {
+                if (bool) {
+                    socket.emit('acceptWin');
+                } else {
+                    socket.emit('Cheating', {
+                        reason: 'Data Tampering',
+                        details:
+                            'You said you won, but the starting position of the enemy ships does not match the final one!',
+                    });
+                }
+            });
+        });
+
         socket.on('setWinner', ({ winnerId, winnerName, gameId }) => {
             updateGame(gameId, winnerId);
             CLOSED_ROOMS.delete(socket.roomId);

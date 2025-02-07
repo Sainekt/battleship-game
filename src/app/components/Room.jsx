@@ -194,7 +194,7 @@ export default function Createroom() {
         };
     }, [player1Disconnect, player2Disconnect, id, username, gameId]);
 
-    //cheating
+    // Check Winner
     useEffect(() => {
         function handleTehnicalWin() {
             setTehnicalWinNotification(true);
@@ -204,9 +204,18 @@ export default function Createroom() {
                 gameId,
             });
         }
+        function handleAcceptWin() {
+            socket.emit('setWinner', {
+                winnerId: id,
+                winnerName: username,
+                gameId,
+            });
+        }
         socket.on('tehnicalWin', handleTehnicalWin);
+        socket.on('acceptWin', handleAcceptWin);
         return () => {
             socket.off('tehnicalWin', handleTehnicalWin);
+            socket.off('acceptWin', handleAcceptWin);
         };
     }, [id, username, gameId]);
 
