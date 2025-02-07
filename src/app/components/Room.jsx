@@ -65,6 +65,10 @@ export default function Createroom() {
     const [rejectedNotification, setRejectedNotification] = useState(false); // bool
     const [kickModal, setKickModal] = useState(false); // bool
     const [kickNotification, setKickNotification] = useState(false); // bool
+    const [cheatingNotification, SetCheatingNotification] = useState(false); // bool
+    const [cheatingMessage, setCheatingMessage] = useState({});
+    const [tehnicalWinNotification, setTehnicalWinNotification] =
+        useState(false); // bool
     const intervalRef = useRef(null);
 
     // reconnect
@@ -90,14 +94,25 @@ export default function Createroom() {
             setGame(true);
             const squares = JSON.parse(localStorage.getItem('squares'));
             const gameData = getLocalStorageGameData();
+            const gameSquares = gameData['GameSquares'];
             setMyBoard(squares);
             setEnemyBoard(gameData['enemyBoard'] || CLEAR_BOARD);
-            setSquares(gameData['GameSquares'] || squares);
+            setSquares(gameSquares || squares);
             setSquaresBoard2(gameData['gameBoard2'] || CLEAR_BOARD);
             setGameId(Number(gameData['gameId']) || null);
+            if (username) {
+                socket.emit('checkGameSquares', gameSquares || squares);
+            }
         }
+        function handleCheating(message) {
+            setCheatingMessage(message);
+            SetCheatingNotification(true);
+            socket.emit('tehnicalWin');
+        }
+        socket.on('Cheating', handleCheating);
         socket.on('setReconnectState', setReconnectState);
         return () => {
+            socket.off('Cheating', handleCheating);
             socket.off('setReconnectState', setReconnectState);
         };
     }, [username]);
@@ -178,6 +193,22 @@ export default function Createroom() {
             clearInterval(intervalRef.current);
         };
     }, [player1Disconnect, player2Disconnect, id, username, gameId]);
+
+    //cheating
+    useEffect(() => {
+        function handleTehnicalWin() {
+            setTehnicalWinNotification(true);
+            socket.emit('setWinner', {
+                winnerId: id,
+                winnerName: username,
+                gameId,
+            });
+        }
+        socket.on('tehnicalWin', handleTehnicalWin);
+        return () => {
+            socket.off('tehnicalWin', handleTehnicalWin);
+        };
+    }, [id, username, gameId]);
 
     // room
     useEffect(() => {
@@ -467,6 +498,24 @@ export default function Createroom() {
                     data={{
                         title: 'Error',
                         text: error,
+                    }}
+                />
+            ) : null}
+            {cheatingNotification ? (
+                <Notification
+                    handleNotification={() => SetCheatingNotification(false)}
+                    data={{
+                        title: cheatingMessage.reason,
+                        text: cheatingMessage.details,
+                    }}
+                />
+            ) : null}
+            {tehnicalWinNotification ? (
+                <Notification
+                    handleNotification={() => setTehnicalWinNotification(false)}
+                    data={{
+                        title: 'Tehnical win',
+                        text: 'Your opponent was caught attempting to cheat.\nYou have been awarded a technical win.',
                     }}
                 />
             ) : null}

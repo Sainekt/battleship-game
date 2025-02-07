@@ -2,6 +2,7 @@
 import Square from './Square';
 import { gameState, userStore, useStore } from '../context/Context';
 import useSendGameState from '../hooks/useSendGameState';
+import { socket } from '../components/Room';
 export default function Panel() {
     useSendGameState();
 
@@ -79,6 +80,7 @@ export default function Panel() {
             } else {
                 setPlayer2Ready(!ready);
             }
+            socket.emit('saveMyBoard', squares);
             setMyBoard(squares);
         }
     }

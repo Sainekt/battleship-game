@@ -27,6 +27,7 @@ app.prepare().then(() => {
         },
     });
     const CLOSED_ROOMS = new Set();
+    const PlayersBoards = {};
     io.on('connection', (socket) => {
         console.log(`Connected ${socket.id}`);
 
@@ -42,6 +43,19 @@ app.prepare().then(() => {
         });
         socket.on('setReconnectState', (state) => {
             socket.to(socket.roomId).emit('setReconnectState', state);
+        });
+
+        socket.on('checkGameSquares', (squares) => {
+            const startSquares = PlayersBoards[socket.username];
+            validReconnectSquares(startSquares, squares).then((result) => {
+                if (!result) {
+                    socket.emit('Cheating', {
+                        reason: 'Data Tampering',
+                        details:
+                            'The positions of the ships have been changed!',
+                    });
+                }
+            });
         });
 
         // room and connect
@@ -119,6 +133,9 @@ app.prepare().then(() => {
         });
 
         // Game
+        socket.on('saveMyBoard', (squares) => {
+            PlayersBoards[socket.username] = squares;
+        });
         socket.on('shot', (shot) => {
             socket.to(socket.roomId).emit('shot', shot);
         });
@@ -168,6 +185,9 @@ app.prepare().then(() => {
             CLOSED_ROOMS.delete(socket.roomId);
             io.to(socket.roomId).emit('setWinner', { winnerName });
         });
+        socket.on('tehnicalWin', () => {
+            socket.to(socket.roomId).emit('tehnicalWin');
+        });
         socket.on('checkStart', (status) => {
             if (status) {
                 CLOSED_ROOMS.add(socket.roomId);
@@ -213,4 +233,25 @@ function updateGame(gameId, winnerId) {
     }).catch((err) => {
         console.error(err);
     });
+}
+
+async function validReconnectSquares(startSquares, squares) {
+    const shipCoords = await getShipsCoords(startSquares);
+    const reconnectShipCoords = await getShipsCoords(squares);
+    return await testSquares(shipCoords, reconnectShipCoords);
+}
+
+async function getShipsCoords(squares) {
+    let shipCoords = [];
+    squares.forEach((value, index) => {
+        if (value && value !== '•') shipCoords.push(index);
+    });
+    return shipCoords;
+}
+
+async function testSquares(coords1, coords2) {
+    return (
+        coords1.length === coords2.length &&
+        coords1.every((value, index) => value === coords2[index])
+    );
 }
