@@ -45,17 +45,15 @@ app.prepare().then(() => {
             socket.to(socket.roomId).emit('setReconnectState', state);
         });
 
-        socket.on('checkGameSquares', (squares) => {
-            const startSquares = PlayersBoards[socket.username];
-            validReconnectSquares(startSquares, squares).then((result) => {
-                if (!result) {
-                    socket.emit('Cheating', {
-                        reason: 'Data Tampering',
-                        details:
-                            'The positions of the ships have been changed!',
-                    });
-                }
-            });
+        socket.on('checkGameSquares', (hash) => {
+            const startSquaresHash = PlayersBoards[socket.username];
+            if (startSquaresHash !== hash) {
+                handleCheating(socket, false);
+            }
+        });
+
+        socket.on('clientError', () => {
+            socket.to(socket.roomId).emit('tehnicalWin');
         });
 
         // room and connect
@@ -133,13 +131,31 @@ app.prepare().then(() => {
         });
 
         // Game
-        socket.on('saveMyBoard', (squares) => {
+        socket.on('saveMyBoardHash', (squares) => {
             PlayersBoards[socket.username] = squares;
         });
         socket.on('shot', (shot) => {
             socket.to(socket.roomId).emit('shot', shot);
         });
         socket.on('hitOrMiss', (shot) => {
+            const validShipId = {
+                A: 'A',
+                B: 'B',
+                C: 'C',
+                D: 'D',
+                E: 'E',
+                F: 'F',
+                G: 'G',
+                H: 'H',
+                I: 'I',
+                J: 'J',
+                null: true,
+            };
+            const [index, shipId] = shot;
+            if (!validShipId[shipId]) {
+                handleCheating(socket, false);
+            }
+
             socket.to(socket.roomId).emit('hitOrMiss', shot);
         });
 
@@ -180,19 +196,13 @@ app.prepare().then(() => {
                     io.to(socket.roomId).emit('setGameId', false);
                 });
         });
-        socket.on('checkWinnerState', ({ opponentName, squares }) => {
-            const opponentStartSquares = PlayersBoards[opponentName];
-            testSquares(opponentStartSquares, squares).then((bool) => {
-                if (bool) {
-                    socket.emit('acceptWin');
-                } else {
-                    socket.emit('Cheating', {
-                        reason: 'Data Tampering',
-                        details:
-                            'You said you won, but the starting position of the enemy ships does not match the final one!',
-                    });
-                }
-            });
+        socket.on('checkWinnerState', ({ opponentName, enemyHash }) => {
+            const opponentHash = PlayersBoards[opponentName];
+            if (opponentHash !== enemyHash) {
+                handleCheating(socket, true);
+            } else {
+                socket.emit('acceptWin');
+            }
         });
 
         socket.on('setWinner', ({ winnerId, winnerName, gameId }) => {
@@ -250,23 +260,13 @@ function updateGame(gameId, winnerId) {
     });
 }
 
-async function validReconnectSquares(startSquares, squares) {
-    const shipCoords = await getShipsCoords(startSquares);
-    const reconnectShipCoords = await getShipsCoords(squares);
-    return await testSquares(shipCoords, reconnectShipCoords);
-}
-
-async function getShipsCoords(squares) {
-    let shipCoords = [];
-    squares.forEach((value, index) => {
-        if (value && value !== '•') shipCoords.push(index);
-    });
-    return shipCoords;
-}
-
-async function testSquares(coords1, coords2) {
-    return (
-        coords1.length === coords2.length &&
-        coords1.every((value, index) => value === coords2[index])
-    );
+function handleCheating(socket, final = false) {
+    const text = {
+        reason: 'Data Tampering',
+        details: final
+            ? 'You said you won, but the starting position of the enemy ships does not match the final one!'
+            : 'The positions of the ships have been changed!',
+    };
+    socket.emit('Cheating', text);
+    socket.to(socket.roomId).emit('tehnicalWin');
 }

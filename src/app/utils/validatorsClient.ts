@@ -1,5 +1,6 @@
 'use client';
 import { FLEET_COUNT, VALID_COORD } from './constants';
+import { getShipCoord } from './utils';
 
 // board coord for left and right line
 export function getValidLocalStorageBoard() {
@@ -16,10 +17,11 @@ export function getValidLocalStorageBoard() {
     try {
         storageSquares = JSON.parse(localStorage.getItem('squares'));
         storageFleet = JSON.parse(localStorage.getItem('fleet'));
-        if (!storageSquares) {
-            return result;
+        if (!storageSquares) return result;
+        if (storageSquares.length !== 100) {
+            throw new Error('Invalid local storage: squares length');
         }
-        const countShips = storageSquares.reduce((acc, curr) => {
+        storageSquares.reduce((acc, curr) => {
             if (!curr) {
                 return acc;
             }
@@ -108,34 +110,26 @@ export function validatePlace(
     return false;
 }
 
-function validatePlaceLocalStorage(storageSquares: Array<String>) {
-    const allCoords: Set<number> = new Set();
-    const ShipCoords = storageSquares.reduce(
-        (acc: object, value: string, i: number) => {
-            if (!value) return acc;
-            allCoords.add(i);
-            if (!acc[value]) {
-                acc[value] = [i];
-            } else {
-                acc[value].push(i);
-            }
-            return acc;
-        },
-        {}
-    );
-    for (const key in ShipCoords) {
-        if (ShipCoords[key].length === 1) {
-            const i = ShipCoords[key][0];
-            const shipCheck = VALID_COORD[i]
+function validatePlaceLocalStorage(storageSquares: Array<string>) {
+    const allCoords: Set<number> = new Set(getShipCoord(storageSquares, true));
+    const shipsCoords = getShipCoord(storageSquares);
+    for (const key in shipsCoords) {
+        const shipCoords = shipsCoords[key];
+        const shipCheck = shipCoords.reduce((curr: Set<number>, i: number) => {
+            const coords = VALID_COORD[i]
                 ? VALID_COORD[i]
                 : [i - 11, i - 10, i - 9, i - 1, i + 1, i + 9, i + 10, i + 11];
-            const shipCheckResult = shipCheck.every(
-                (index: number) => !allCoords.has(index)
-            );
-            if (!shipCheckResult) return false;
-            continue;
-        }
-        const coords = ShipCoords[key];
+            return new Set([...curr, ...coords]);
+        }, new Set());
+        shipCoords.forEach((i: number) => {
+            shipCheck.delete(i);
+        });
+        const shipCheckResult = [...shipCheck].every(
+            (index: number) => !allCoords.has(index)
+        );
+        if (!shipCheckResult) return false;
+        if (shipsCoords[key].length === 1) continue;
+        const coords = shipsCoords[key];
         let direction = '';
         if (coords[1] - coords[0] === 1) {
             direction = 'h';

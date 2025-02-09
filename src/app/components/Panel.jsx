@@ -3,6 +3,10 @@ import Square from './Square';
 import { gameState, userStore, useStore } from '../context/Context';
 import useSendGameState from '../hooks/useSendGameState';
 import { socket } from '../components/Room';
+import { getHashCode, getShipCoord } from '../utils/utils';
+import { useState } from 'react';
+import Notification from './Notification';
+
 export default function Panel() {
     useSendGameState();
 
@@ -29,6 +33,7 @@ export default function Panel() {
     } = gameState((state) => state);
 
     const { username } = userStore((state) => state);
+    const [errorNotification, setErrorNotification] = useState(false);
 
     function getSquare(size, have) {
         const squares = [];
@@ -73,6 +78,11 @@ export default function Panel() {
     }
 
     function handleReady() {
+        const allCoords = getShipCoord(squares, true);
+        if (allCoords.length !== 20) {
+            setErrorNotification(true);
+            return;
+        }
         if (allShipPlaced && roomId && player2) {
             setReady();
             if (username == roomId) {
@@ -80,12 +90,22 @@ export default function Panel() {
             } else {
                 setPlayer2Ready(!ready);
             }
-            socket.emit('saveMyBoard', squares);
+            const hash = getHashCode(JSON.stringify(allCoords));
+            socket.emit('saveMyBoardHash', hash);
             setMyBoard(squares);
         }
     }
     return (
         <>
+            {errorNotification ? (
+                <Notification
+                    handleNotification={() => setErrorNotification(false)}
+                    data={{
+                        title: 'Error',
+                        text: 'You have to place all ships on the board',
+                    }}
+                />
+            ) : null}
             {ship ? <h2>selected: size {ship}</h2> : null}
             {fleet.map((el, i) => {
                 return (

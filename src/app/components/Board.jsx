@@ -5,6 +5,8 @@ import {
     getStyle,
     markerMiss,
     updateLocalStorageGameData,
+    getHashCode,
+    getShipCoord,
 } from '../utils/utils';
 import {
     validatePlace,
@@ -89,9 +91,6 @@ export default function Board() {
             if (!roomId) {
                 return;
             }
-            if (squares[shot] === 'X' || squares[shot] === '•') {
-                return;
-            }
             let marker = '•';
             if (squares[shot]) {
                 marker = 'X';
@@ -137,9 +136,11 @@ export default function Board() {
 
             const destroyShips = checkGame(newEnemyBoard, newValues);
             if (destroyShips.length === 10) {
+                const allCoord = getShipCoord(newEnemyBoard, true);
+                const hash = getHashCode(JSON.stringify(allCoord));
                 socket.emit('checkWinnerState', {
                     opponentName: username === player1 ? player2 : player1,
-                    squares: newEnemyBoard,
+                    enemyHash: hash,
                 });
             }
             if (destroyShips.length) {

@@ -4,7 +4,7 @@ import { io } from 'socket.io-client';
 import { gameState, userStore, useStore } from '../context/Context';
 import Modal from './Modal';
 import Notification from './Notification';
-import { checkRoomIdData } from '../utils/utils';
+import { checkRoomIdData, getHashCode, getShipCoord } from '../utils/utils';
 import { CLEAR_BOARD, TIME_FOR_RECONNECT } from '../utils/constants';
 import {
     deleteLocalStorageReconnectData,
@@ -95,19 +95,27 @@ export default function Createroom() {
             const squares = JSON.parse(localStorage.getItem('squares'));
             const gameData = getLocalStorageGameData();
             const gameSquares = gameData['GameSquares'];
+            if (!squares && !gameSquares) {
+                socket.emit('clientError');
+                return;
+            }
             setMyBoard(squares);
             setEnemyBoard(gameData['enemyBoard'] || CLEAR_BOARD);
             setSquares(gameSquares || squares);
             setSquaresBoard2(gameData['gameBoard2'] || CLEAR_BOARD);
             setGameId(Number(gameData['gameId']) || null);
             if (username) {
-                socket.emit('checkGameSquares', gameSquares || squares);
+                const allShipCoords = getShipCoord(
+                    gameSquares || squares,
+                    true
+                );
+                const hash = getHashCode(JSON.stringify(allShipCoords));
+                socket.emit('checkGameSquares', hash);
             }
         }
         function handleCheating(message) {
             setCheatingMessage(message);
             SetCheatingNotification(true);
-            socket.emit('tehnicalWin');
         }
         socket.on('Cheating', handleCheating);
         socket.on('setReconnectState', setReconnectState);
