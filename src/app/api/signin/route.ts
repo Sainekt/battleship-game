@@ -26,7 +26,10 @@ export async function POST(request: Request): Promise<Response> {
         const users = await getUserByUsername(username);
         if (users.length === 0) {
             return new Response(
-                JSON.stringify({ username: 'User not found' }),
+                JSON.stringify({
+                    success: false,
+                    data: { username: 'User not found' },
+                }),
                 {
                     status: 401,
                     headers: HEADERS,
@@ -36,7 +39,10 @@ export async function POST(request: Request): Promise<Response> {
         const user = users[0];
         if (!(await comparePassword(password, user.password))) {
             return new Response(
-                JSON.stringify({ password: 'incorrect password' }),
+                JSON.stringify({
+                    success: false,
+                    data: { password: 'incorrect password' },
+                }),
                 { status: 401, headers: HEADERS }
             );
         }
