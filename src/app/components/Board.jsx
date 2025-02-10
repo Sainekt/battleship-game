@@ -5,6 +5,8 @@ import {
     getStyle,
     markerMiss,
     updateLocalStorageGameData,
+    getHashCode,
+    getShipCoord,
 } from '../utils/utils';
 import {
     validatePlace,
@@ -69,6 +71,8 @@ export default function Board() {
         move,
         setMove,
         stop,
+        player1,
+        player2,
     } = gameState((state) => state);
     const { id, username } = userStore((state) => state);
     useEffect(() => {
@@ -85,9 +89,6 @@ export default function Board() {
         // update board 1 if enemy do shot
         function handleShot(shot) {
             if (!roomId) {
-                return;
-            }
-            if (squares[shot] === 'X' || squares[shot] === '•') {
                 return;
             }
             let marker = '•';
@@ -135,10 +136,11 @@ export default function Board() {
 
             const destroyShips = checkGame(newEnemyBoard, newValues);
             if (destroyShips.length === 10) {
-                socket.emit('setWinner', {
-                    winnerId: id,
-                    winnerName: username,
-                    gameId,
+                const allCoord = getShipCoord(newEnemyBoard, true);
+                const hash = getHashCode(JSON.stringify(allCoord));
+                socket.emit('checkWinnerState', {
+                    opponentName: username === player1 ? player2 : player1,
+                    enemyHash: hash,
                 });
             }
             if (destroyShips.length) {

@@ -4,7 +4,7 @@ import { io } from 'socket.io-client';
 import { gameState, userStore, useStore } from '../context/Context';
 import Modal from './Modal';
 import Notification from './Notification';
-import { checkRoomIdData } from '../utils/utils';
+import { checkRoomIdData, getHashCode, getShipCoord } from '../utils/utils';
 import { CLEAR_BOARD, TIME_FOR_RECONNECT } from '../utils/constants';
 import {
     deleteLocalStorageReconnectData,
@@ -65,6 +65,10 @@ export default function Createroom() {
     const [rejectedNotification, setRejectedNotification] = useState(false); // bool
     const [kickModal, setKickModal] = useState(false); // bool
     const [kickNotification, setKickNotification] = useState(false); // bool
+    const [cheatingNotification, SetCheatingNotification] = useState(false); // bool
+    const [cheatingMessage, setCheatingMessage] = useState({});
+    const [tehnicalWinNotification, setTehnicalWinNotification] =
+        useState(false); // bool
     const intervalRef = useRef(null);
 
     // reconnect
@@ -90,14 +94,33 @@ export default function Createroom() {
             setGame(true);
             const squares = JSON.parse(localStorage.getItem('squares'));
             const gameData = getLocalStorageGameData();
+            const gameSquares = gameData['GameSquares'];
+            if (!squares && !gameSquares) {
+                socket.emit('clientError');
+                return;
+            }
             setMyBoard(squares);
             setEnemyBoard(gameData['enemyBoard'] || CLEAR_BOARD);
-            setSquares(gameData['GameSquares'] || squares);
+            setSquares(gameSquares || squares);
             setSquaresBoard2(gameData['gameBoard2'] || CLEAR_BOARD);
             setGameId(Number(gameData['gameId']) || null);
+            if (username) {
+                const allShipCoords = getShipCoord(
+                    gameSquares || squares,
+                    true
+                );
+                const hash = getHashCode(JSON.stringify(allShipCoords));
+                socket.emit('checkGameSquares', hash);
+            }
         }
+        function handleCheating(message) {
+            setCheatingMessage(message);
+            SetCheatingNotification(true);
+        }
+        socket.on('Cheating', handleCheating);
         socket.on('setReconnectState', setReconnectState);
         return () => {
+            socket.off('Cheating', handleCheating);
             socket.off('setReconnectState', setReconnectState);
         };
     }, [username]);
@@ -178,6 +201,31 @@ export default function Createroom() {
             clearInterval(intervalRef.current);
         };
     }, [player1Disconnect, player2Disconnect, id, username, gameId]);
+
+    // Check Winner
+    useEffect(() => {
+        function handleTehnicalWin() {
+            setTehnicalWinNotification(true);
+            socket.emit('setWinner', {
+                winnerId: id,
+                winnerName: username,
+                gameId,
+            });
+        }
+        function handleAcceptWin() {
+            socket.emit('setWinner', {
+                winnerId: id,
+                winnerName: username,
+                gameId,
+            });
+        }
+        socket.on('tehnicalWin', handleTehnicalWin);
+        socket.on('acceptWin', handleAcceptWin);
+        return () => {
+            socket.off('tehnicalWin', handleTehnicalWin);
+            socket.off('acceptWin', handleAcceptWin);
+        };
+    }, [id, username, gameId]);
 
     // room
     useEffect(() => {
@@ -467,6 +515,24 @@ export default function Createroom() {
                     data={{
                         title: 'Error',
                         text: error,
+                    }}
+                />
+            ) : null}
+            {cheatingNotification ? (
+                <Notification
+                    handleNotification={() => SetCheatingNotification(false)}
+                    data={{
+                        title: cheatingMessage.reason,
+                        text: cheatingMessage.details,
+                    }}
+                />
+            ) : null}
+            {tehnicalWinNotification ? (
+                <Notification
+                    handleNotification={() => setTehnicalWinNotification(false)}
+                    data={{
+                        title: 'Tehnical win',
+                        text: 'Your opponent was caught attempting to cheat.\nYou have been awarded a technical win.',
                     }}
                 />
             ) : null}

@@ -14,16 +14,20 @@ export function getStyle(start = false, disabled = false, ship = false) {
 }
 
 // return obj ships coordinate -> ship : [1,2,3,4]
-function getShipCoord(arr) {
+export function getShipCoord(arr, all = false) {
+    const allCoord = [];
     const result = arr.reduce((acc, curr, i) => {
         if (curr) {
             if (!acc[curr]) {
                 acc[curr] = [];
             }
+            if (all && curr !== '•') allCoord.push(i);
             acc[curr].push(i);
         }
         return acc;
     }, {});
+    if (all) return allCoord;
+
     return result;
 }
 
@@ -111,4 +115,14 @@ export function checkRoomIdData() {
     }
     deleteLocalStorageReconnectData();
     return false;
+}
+
+export function getHashCode(string) {
+    let hash = 0;
+    for (let i = 0; i < string.length; i++) {
+        const chr = string.charCodeAt(i);
+        hash = (hash << 5) - hash + chr;
+        hash |= 0;
+    }
+    return hash;
 }
