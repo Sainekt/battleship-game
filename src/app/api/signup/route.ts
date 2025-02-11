@@ -27,7 +27,10 @@ export async function POST(request: Request): Promise<Response> {
         await createUser(username, password, email);
     } catch (error) {
         return new Response(
-            JSON.stringify({ error: 'username or email is already exists' }),
+            JSON.stringify({
+                success: false,
+                data: { error: 'username or email is already exists' },
+            }),
             {
                 status: 400,
                 headers: HEADERS,

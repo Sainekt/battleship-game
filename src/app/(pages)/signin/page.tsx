@@ -42,7 +42,7 @@ export default function SignUp() {
                     content='width=device-width, initial-scale=1.0'
                 />
                 <div className='text-center mb-6'>
-                    <h1 className='text-2xl font-bold text-gray-700'>Login</h1>
+                    <h1 className='text-2xl font-bold text-gray-700'>Sign in</h1>
                 </div>
                 <form method='POST'>
                     <div className='mb-4'>
@@ -128,7 +128,7 @@ export default function SignUp() {
                     />
                 </form>
                 <Link href={'/signup'}>
-                    <h6 className='text-center text-blue-500 mt-4 cursor-pointer'>
+                    <h6 className='text-center text-blue-500 mt-4 cursor-pointer hover:text-blue-600'>
                         Sign Up!
                     </h6>
                 </Link>

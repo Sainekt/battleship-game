@@ -63,7 +63,7 @@ export default function FindGame({ handleSetModal }) {
             {modal ? (
                 <Modal
                     data={{
-                        title: 'Room already joined',
+                        title: 'Already in the room',
                         text: `You are already in the room: ${roomId}.
                               \nAre you sure you want to leave the current room and move to another one ?`,
                     }}

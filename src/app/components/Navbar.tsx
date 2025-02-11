@@ -1,5 +1,4 @@
 'use client';
-import Link from 'next/link';
 import { removeCookieToken } from '../security/token';
 import { useState, useEffect } from 'react';
 import { userStore, gameState } from '../context/Context';
@@ -7,6 +6,7 @@ import FindGame from './FindGame';
 import Profile from './Profile';
 import { HEADERS } from '../utils/constants';
 import { socket } from '../components/Room';
+import { useRouter } from 'next/navigation';
 
 export default function NavBar() {
     const {
@@ -22,7 +22,7 @@ export default function NavBar() {
         setAvg,
     } = userStore((state) => state);
     const { game } = gameState((state) => state);
-
+    const router = useRouter();
     const [findgame, setFindgame] = useState(false);
     const [profile, setProfile] = useState(false);
 
@@ -61,44 +61,53 @@ export default function NavBar() {
     function handleLogOut() {
         removeCookieToken();
         socket.disconnect();
+        router.push('/signin');
     }
 
     return (
         <>
-            <nav className='navbar'>
-                <div className='userInfo'>
-                    {username}
-                    <br />
-                    Games: {games.length}
+            <nav className='bg-gray-100 mx-auto flex p-4 justify-between items-center'>
+                <div className='flex items-center text-center bg-blue-100 border-2 border-blue-300 rounded-lg p-2'>
+                    <div className='flex-row'>
+                        <span className='font-bold'>
+                            {username ? username : 'loading...'}
+                        </span>
+                        <br />
+                        <span className='font-bold'>Games:</span> {games.length}
+                        <br />
+                    </div>
+                    <div className='ml-2'>
+                        <span className='font-bold'>Victories:</span>{' '}
+                        {victories}
+                        <br />
+                        <span className='font-bold'>W/L:</span> {avg}
+                    </div>
                 </div>
-                <div className='userInfo'>
-                    Victories: {victories}
-                    <br />
-                    W/L: {avg}
-                </div>
-                <div className='navButtons'>
+
+                <div className='flex-grow flex justify-center mx-4'>
                     <button
-                        className='button-nav'
+                        className='bg-blue-500 text-white font-bold px-4 rounded-l-full w-26 h-12 border-r-2 border-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:border-gray-400'
                         onClick={handleFindGame}
                         disabled={username && !game ? false : true}
                     >
                         Find game
                     </button>
                     <button
-                        className='button-nav'
+                        className='bg-blue-500 text-white font-bold px-4 rounded-r-full w-28 hover:bg-blue-700 disabled:bg-gray-300'
                         onClick={handleProfile}
                         disabled={username ? false : true}
                     >
                         Profile
                     </button>
                 </div>
-                <Link
-                    className='logout-btn'
-                    onClick={handleLogOut}
-                    href={'/signin'}
-                >
-                    Log Out
-                </Link>
+                <div className='justify-end'>
+                    <button
+                        onClick={handleLogOut}
+                        className='  bg-red-500 text-white font-bold px-4 rounded-full w-28 h-12 hover:bg-red-700'
+                    >
+                        Log out
+                    </button>
+                </div>
             </nav>
             {findgame ? (
                 <FindGame handleSetModal={handleFindGame}></FindGame>
