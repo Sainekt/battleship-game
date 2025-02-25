@@ -24,8 +24,8 @@ export default function useSendGameState() {
         game,
         gameId,
         setGame,
-        motion,
-        setMotion,
+        playerMove,
+        setPlayerMove,
         setTimer,
         setMove,
         setWinner,
@@ -80,7 +80,7 @@ export default function useSendGameState() {
         }
         function handleSetWinner({ winnerName }) {
             setWinner(winnerName);
-            setMotion(null);
+            setPlayerMove(null);
             setTimer(0);
             setGame(false);
             socket.emit('updateUserData');
@@ -88,24 +88,24 @@ export default function useSendGameState() {
         }
 
         function handleSetMotion(user) {
-            if (!motion) {
-                setMotion(user);
+            if (!playerMove) {
+                setPlayerMove(user);
             }
         }
         function handeSetTimer(time) {
             setTimer(time);
-            if (username === motion) {
+            if (username === playerMove) {
                 setMove(true);
             } else {
                 setMove(false);
             }
             setLocalStorageRoomId(roomId);
         }
-        function handleChangeMotion(motion) {
-            if (motion === player1) {
-                setMotion(player2);
+        function handleChangeMotion(playerMove) {
+            if (playerMove === player1) {
+                setPlayerMove(player2);
             } else {
-                setMotion(player1);
+                setPlayerMove(player1);
             }
             socket.emit('setTimer', TIME_FOR_MOTION);
         }
@@ -116,7 +116,7 @@ export default function useSendGameState() {
                 setGame(true);
                 setTimer(0);
                 if (username === roomId) {
-                    socket.emit('setMotion', [player1, player2]);
+                    socket.emit('setPlayerMove', [player1, player2]);
                     timeOut = setTimeout(() => {
                         socket.emit('createGame', { player1, player2 });
                     }, 1000);
@@ -143,7 +143,7 @@ export default function useSendGameState() {
             socket.on('sendState', handleReceivingState);
         }
         if (game) {
-            socket.on('setMotion', handleSetMotion);
+            socket.on('setPlayerMove', handleSetMotion);
         }
         socket.on('setTimer', handeSetTimer);
         socket.on('changeMotion', handleChangeMotion);
@@ -160,14 +160,14 @@ export default function useSendGameState() {
             socket.off('setTimer', handeSetTimer);
             socket.off('sendState', handleReceivingState);
             socket.off('checkStart', checkStart);
-            socket.off('setMotion', handleSetMotion);
+            socket.off('setPlayerMove', handleSetMotion);
         };
     }, [
         roomId,
         player1Ready,
         player2Ready,
         game,
-        motion,
+        playerMove,
         ready,
         gameId,
         enemyId,

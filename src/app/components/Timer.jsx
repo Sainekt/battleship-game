@@ -1,17 +1,18 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
-import { gameState, useStore, userStore } from '../context/Context';
+import { gameState, userStore } from '../context/Context';
 import { socket } from './Room';
 import { TIME_FOR_START, TIME_FOR_MOTION } from '../utils/constants';
 
 export default function Timer() {
     const [text, setText] = useState(null);
+    const [textTimer, setTextTimer] = useState(null);
     const {
         player1Ready,
         player2Ready,
         game,
         roomId,
-        motion,
+        playerMove,
         timer,
         setTimer,
         setMove,
@@ -59,17 +60,17 @@ export default function Timer() {
         return () => {
             clearTimeout(timeOutStart.current);
         };
-    }, [player1Ready, player2Ready, game, timer, motion]);
+    }, [player1Ready, player2Ready, game, timer, playerMove]);
 
     // move timer
     useEffect(() => {
-        if (!game || !motion || winner || stop) {
+        if (!game || !playerMove || winner || stop) {
             clearTimeout(timeOutGame.current);
             return;
         }
-        username === motion && timer > 0
+        username === playerMove && timer > 0
             ? setText(`Yours move: `)
-            : setText(`Player's turn: ${motion}`);
+            : setText(`Player's turn: ${playerMove}`);
         if (timer <= 0) {
             setText('turn change...');
         }
@@ -80,7 +81,7 @@ export default function Timer() {
                 setMove(false);
                 if (username === roomId) {
                     setTimeout(() => {
-                        socket.emit('changeMotion', motion);
+                        socket.emit('changeMotion', playerMove);
                     }, 2000);
                 }
             }
@@ -89,21 +90,27 @@ export default function Timer() {
         return () => {
             clearTimeout(timeOutGame.current);
         };
-    }, [motion, timer, game, winner, stop]);
+    }, [playerMove, timer, game, winner, stop]);
 
-    function getText() {
+    useEffect(() => {
         if (winner) {
-            return winner === username ? "You've won" : "You've lost";
+            return setTextTimer(
+                winner === username ? "You've won" : "You've lost"
+            );
         }
-        if (timer > 0 && !game) {
-            return `${text} ${timer}`;
-        } else if (timer > 0 && game) {
-            return `${text} ${timer}`;
+        if (timer > 0) {
+            return setTextTimer(`${text} ${timer}`);
         } else if (timer <= 0 && game) {
-            return text;
+            return setTextTimer(text);
         }
-        return null;
-    }
+        setTextTimer(null);
+    }, [text, timer, winner]);
 
-    return <h3>{getText()}</h3>;
+    return (
+        <>
+            <div className='text-3xl text-blue-500 p-1 rounded-lg border-2 my-2 min-w-max min-h-14 text-center'>
+                {textTimer ? textTimer : null}
+            </div>
+        </>
+    );
 }

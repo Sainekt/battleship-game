@@ -1,10 +1,12 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { io } from 'socket.io-client';
 import { gameState, userStore, useStore } from '../context/Context';
 import Modal from './Modal';
 import Notification from './Notification';
-import { checkRoomIdData, getHashCode, getShipCoord } from '../utils/utils';
+import { AnimateButton } from './AnimateButton';
+import { checkRoomIdData } from '../utils/utils';
 import { CLEAR_BOARD, TIME_FOR_RECONNECT } from '../utils/constants';
 import {
     deleteLocalStorageReconnectData,
@@ -29,11 +31,10 @@ export default function Createroom() {
         winner,
         gameId,
         timer,
-        motion,
-        enemyBoard,
+        playerMove,
         myBoard,
         setGameId,
-        setMotion,
+        setPlayerMove,
         setTimer,
         setEnemyBoard,
         setMyBoard,
@@ -65,10 +66,6 @@ export default function Createroom() {
     const [rejectedNotification, setRejectedNotification] = useState(false); // bool
     const [kickModal, setKickModal] = useState(false); // bool
     const [kickNotification, setKickNotification] = useState(false); // bool
-    const [cheatingNotification, SetCheatingNotification] = useState(false); // bool
-    const [cheatingMessage, setCheatingMessage] = useState({});
-    const [tehnicalWinNotification, setTehnicalWinNotification] =
-        useState(false); // bool
     const intervalRef = useRef(null);
 
     // reconnect
@@ -82,8 +79,8 @@ export default function Createroom() {
             setRoomId(state.roomId);
             setPlayer1(state.player1);
             setPlayer2(state.player2);
-            setMotion(state.motion);
-            if (state.motion === username) {
+            setPlayerMove(state.playerMove);
+            if (state.playerMove === username) {
                 setMove(true);
             }
             setTimer(state.timer);
@@ -94,33 +91,14 @@ export default function Createroom() {
             setGame(true);
             const squares = JSON.parse(localStorage.getItem('squares'));
             const gameData = getLocalStorageGameData();
-            const gameSquares = gameData['GameSquares'];
-            if (!squares && !gameSquares) {
-                socket.emit('clientError');
-                return;
-            }
             setMyBoard(squares);
             setEnemyBoard(gameData['enemyBoard'] || CLEAR_BOARD);
-            setSquares(gameSquares || squares);
+            setSquares(gameData['GameSquares'] || squares);
             setSquaresBoard2(gameData['gameBoard2'] || CLEAR_BOARD);
             setGameId(Number(gameData['gameId']) || null);
-            if (username) {
-                const allShipCoords = getShipCoord(
-                    gameSquares || squares,
-                    true
-                );
-                const hash = getHashCode(JSON.stringify(allShipCoords));
-                socket.emit('checkGameSquares', hash);
-            }
         }
-        function handleCheating(message) {
-            setCheatingMessage(message);
-            SetCheatingNotification(true);
-        }
-        socket.on('Cheating', handleCheating);
         socket.on('setReconnectState', setReconnectState);
         return () => {
-            socket.off('Cheating', handleCheating);
             socket.off('setReconnectState', setReconnectState);
         };
     }, [username]);
@@ -139,7 +117,7 @@ export default function Createroom() {
                 roomId,
                 player1,
                 player2,
-                motion,
+                playerMove,
                 timer,
                 id,
             };
@@ -149,7 +127,7 @@ export default function Createroom() {
         return () => {
             socket.off('requestGameState', requestGameState);
         };
-    }, [roomId, player1, player2, motion, timer, username, id]);
+    }, [roomId, player1, player2, playerMove, timer, username, id]);
 
     // disconnect
     useEffect(() => {
@@ -201,31 +179,6 @@ export default function Createroom() {
             clearInterval(intervalRef.current);
         };
     }, [player1Disconnect, player2Disconnect, id, username, gameId]);
-
-    // Check Winner
-    useEffect(() => {
-        function handleTehnicalWin() {
-            setTehnicalWinNotification(true);
-            socket.emit('setWinner', {
-                winnerId: id,
-                winnerName: username,
-                gameId,
-            });
-        }
-        function handleAcceptWin() {
-            socket.emit('setWinner', {
-                winnerId: id,
-                winnerName: username,
-                gameId,
-            });
-        }
-        socket.on('tehnicalWin', handleTehnicalWin);
-        socket.on('acceptWin', handleAcceptWin);
-        return () => {
-            socket.off('tehnicalWin', handleTehnicalWin);
-            socket.off('acceptWin', handleAcceptWin);
-        };
-    }, [id, username, gameId]);
 
     // room
     useEffect(() => {
@@ -434,133 +387,215 @@ export default function Createroom() {
     }
     return (
         <>
-            <h2>Room ID: {roomId || 'No room'}</h2>
-            {winnerNotification ? (
-                <Notification
-                    handleNotification={() => {
-                        if (player1Disconnect || player2Disconnect) {
-                            setPlayer1Disconnect(false);
-                            setPlayer2Disconnect(false);
-                            setStop(false);
-                            handleLeaveRoom();
-                        }
-                        setWinnerNotification(false);
-                    }}
-                    data={{
-                        title: 'Winner',
-                        text: `${
-                            winner === username ? "You've" : winner
-                        } won this game`,
-                    }}
-                />
-            ) : null}
-            {disconnectNotification ? (
-                <Notification
-                    handleNotification={() => setDisconnectNotification(false)}
-                    data={{
-                        title: 'Player Disconnect',
-                        text: `${
-                            player1Disconnect ? player1 : player2
-                        } has been disconnected Stay in the game!\nIf he do not reconnect within ${TIME_FOR_RECONNECT} 
+            <div className='bg-gray-50 border rounded-lg p-3 m-2  min-w-52 overflow-hidden'>
+                <div className='text-center border-2 rounded-lg bg-white'>
+                    <span className='font-bold text-gray-800'>Room ID: </span>
+                    <br />
+                    <span className='text-blue-500 font-bold'>
+                        {roomId || 'No room'}
+                    </span>
+                </div>
+                <AnimatePresence initial={false}>
+                    {winnerNotification ? (
+                        <Notification
+                            handleNotification={() => {
+                                if (player1Disconnect || player2Disconnect) {
+                                    setPlayer1Disconnect(false);
+                                    setPlayer2Disconnect(false);
+                                    setStop(false);
+                                    handleLeaveRoom();
+                                }
+                                setWinnerNotification(false);
+                            }}
+                            data={{
+                                title: 'Winner',
+                                text: `${
+                                    winner === username ? "You've" : winner
+                                } won this game`,
+                            }}
+                        />
+                    ) : null}
+                </AnimatePresence>
+                <AnimatePresence initial={false}>
+                    {disconnectNotification ? (
+                        <Notification
+                            handleNotification={() =>
+                                setDisconnectNotification(false)
+                            }
+                            data={{
+                                title: 'Player Disconnect',
+                                text: `${
+                                    player1Disconnect ? player1 : player2
+                                } has been disconnected Stay in the game!\nIf he do not reconnect within ${TIME_FOR_RECONNECT} 
                         seconds, you will be awarded the victory!`,
-                    }}
-                />
-            ) : null}
-            {rejectedNotification ? (
-                <Notification
-                    handleNotification={() => setRejectedNotification(false)}
-                    data={{
-                        title: 'Rematch rejected',
-                        text: 'Rematch request rejected',
-                    }}
-                />
-            ) : null}
-            {rematch ? (
-                <Modal
-                    data={{
-                        title: 'Request for a rematch',
-                        text: `Player ${
-                            username === player1 ? player2 : player1
-                        } offers a rematch\n
+                            }}
+                        />
+                    ) : null}
+                </AnimatePresence>
+                <AnimatePresence initial={false}>
+                    {rejectedNotification ? (
+                        <Notification
+                            handleNotification={() =>
+                                setRejectedNotification(false)
+                            }
+                            data={{
+                                title: 'Rematch rejected',
+                                text: 'Rematch request rejected',
+                            }}
+                        />
+                    ) : null}
+                </AnimatePresence>
+                <AnimatePresence initial={false}>
+                    {rematch ? (
+                        <Modal
+                            data={{
+                                title: 'Request for a rematch',
+                                text: `Player ${
+                                    username === player1 ? player2 : player1
+                                } offers a rematch\n
                         Do you want to play again?`,
-                    }}
-                    eventAccept={acceptRematch}
-                    eventReject={rejectRematch}
-                />
-            ) : null}
-            {kickModal ? (
-                <Modal
-                    data={{
-                        title: 'Kick player',
-                        text: `Do you really want to exclude ${player2} from the room?\n
+                            }}
+                            eventAccept={acceptRematch}
+                            eventReject={rejectRematch}
+                        />
+                    ) : null}
+                </AnimatePresence>
+                <AnimatePresence initial={false}>
+                    {kickModal ? (
+                        <Modal
+                            data={{
+                                title: 'Kick player',
+                                text: `Do you really want to exclude ${player2} from the room?\n
                             If you confirm, the player will not be able to join you until you refresh the page.`,
-                    }}
-                    eventAccept={acceptKick}
-                    eventReject={() => setKickModal(false)}
-                />
-            ) : null}
-            {kickNotification ? (
-                <Notification
-                    handleNotification={() => setKickNotification(false)}
-                    data={{
-                        title: 'Kicked',
-                        text: `You have been excluded from the room by the room owner. \n
+                            }}
+                            eventAccept={acceptKick}
+                            eventReject={() => setKickModal(false)}
+                        />
+                    ) : null}{' '}
+                </AnimatePresence>
+                <AnimatePresence initial={false}>
+                    {kickNotification ? (
+                        <Notification
+                            handleNotification={() =>
+                                setKickNotification(false)
+                            }
+                            data={{
+                                title: 'Kicked',
+                                text: `You have been excluded from the room by the room owner. \n
                         You will be able to join this room again after the owner refreshes the page.`,
-                    }}
-                />
-            ) : null}
-            {error ? (
-                <Notification
-                    handleNotification={() => setError(null)}
-                    data={{
-                        title: 'Error',
-                        text: error,
-                    }}
-                />
-            ) : null}
-            {cheatingNotification ? (
-                <Notification
-                    handleNotification={() => SetCheatingNotification(false)}
-                    data={{
-                        title: cheatingMessage.reason,
-                        text: cheatingMessage.details,
-                    }}
-                />
-            ) : null}
-            {tehnicalWinNotification ? (
-                <Notification
-                    handleNotification={() => setTehnicalWinNotification(false)}
-                    data={{
-                        title: 'Tehnical win',
-                        text: 'Your opponent was caught attempting to cheat.\nYou have been awarded a technical win.',
-                    }}
-                />
-            ) : null}
-            {winner ? <button onClick={handleRematch}>Rematch</button> : null}
-            {sendRematch ? `Requesting rematch... ${roomTimer}` : null}
-            <button onClick={handleCreateRoom} disabled={roomId || !username}>
-                Create Room
-            </button>
-            <button onClick={handleJoinRoom} disabled={roomId || !username}>
-                join room
-            </button>
-            <p>
-                Player 1: {player1} {player1Ready ? 'ready' : null}{' '}
-                {player1Disconnect ? `disconnected... ${roomTimer}` : null}
-            </p>
-            <p>
-                Player 2: {player2} {player2Ready ? 'ready' : null}{' '}
-                {player2Disconnect ? `disconnected... ${roomTimer}` : null}
-                {username === player1 && !game && player2 ? (
-                    <button onClick={() => setKickModal(true)}>Kick</button>
+                            }}
+                        />
+                    ) : null}
+                </AnimatePresence>
+                <AnimatePresence initial={false}>
+                    {error ? (
+                        <Notification
+                            handleNotification={() => setError(null)}
+                            data={{
+                                title: 'Error',
+                                text: error,
+                            }}
+                        />
+                    ) : null}
+                </AnimatePresence>
+                <AnimatePresence initial={false}>
+                    {winner ? (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0 }}
+                            key='rematchButton'
+                        >
+                            <AnimateButton
+                                className='bg-blue-500 p-1 rounded-full text-white text-sm my-1 disabled:bg-gray-400 
+                        disabled:cursor-not-allowed hover:bg-blue-700 w-full'
+                                onClick={handleRematch}
+                                title={'Rematch'}
+                            ></AnimateButton>
+                        </motion.div>
+                    ) : null}
+                </AnimatePresence>
+                {sendRematch ? (
+                    <>
+                        <div className='text-blue-500 text-center '>
+                            Requesting rematch... {roomTimer}
+                        </div>
+                    </>
                 ) : null}
-            </p>
-            <button
-                onClick={handleLeaveRoom}
-                disabled={game || !roomId ? true : false}
-            >
-                Leave room
-            </button>
+                <div className='flex-row justify-between'>
+                    <AnimateButton
+                        className='bg-blue-500 p-1 rounded-full text-white text-sm my-1 disabled:bg-gray-400 
+                        disabled:cursor-not-allowed hover:bg-blue-700 w-full'
+                        onClick={handleCreateRoom}
+                        disabled={roomId || !username}
+                        title={'Create room'}
+                    ></AnimateButton>
+                    <AnimateButton
+                        className='bg-blue-500 p-1 rounded-full text-white text-sm my-1 w-full disabled:bg-gray-400 disabled:cursor-not-allowed hover:bg-blue-700'
+                        onClick={handleJoinRoom}
+                        disabled={roomId || !username}
+                        title={'Join room'}
+                    ></AnimateButton>
+                </div>
+                {roomId ? (
+                    <div className='flex flex-col items-center justify-center'>
+                        <div className='flex items-center'>
+                            <span className='max-w-48 min-w-12 overflow-x-hidden flex-1 text-center'>
+                                {player1}
+                            </span>
+                            <span className='text-blue-500 ml-1'>
+                                {player1Ready && !game ? 'ready' : null}
+                            </span>
+                            <span className='text-red-500'>
+                                {player1Disconnect
+                                    ? `disconnected... ${roomTimer}`
+                                    : null}
+                            </span>
+                        </div>
+                        {player2 ? (
+                            <span className='font-bold text-red-500'>VS</span>
+                        ) : null}
+                        <div className='flex items-center'>
+                            <span className='max-w-48 min-w-12 overflow-x-hidden flex-1 text-center'>
+                                {player2}
+                            </span>
+                            <span className='text-blue-500 ml-1'>
+                                {player2Ready && !game ? 'ready' : null}
+                            </span>
+                            <span className='text-red-500'>
+                                {player2Disconnect
+                                    ? `disconnected... ${roomTimer}`
+                                    : null}
+                            </span>
+                        </div>
+                    </div>
+                ) : null}
+                <AnimatePresence initial={false}>
+                    {username === player1 && !game && player2 ? (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0 }}
+                            key='kickButton'
+                        >
+                            <button
+                                className='bg-blue-500 hover:bg-blue-600 text-white rounded-full p-1 max-h-8 w-full overflow-hidden transition duration-200
+                        text-sm'
+                                onClick={() => setKickModal(true)}
+                            >
+                                Kick {player2}
+                            </button>
+                        </motion.div>
+                    ) : null}
+                </AnimatePresence>
+                <AnimateButton
+                    className='bg-red-500 hover:bg-red-600 text-white rounded-full p-1 w-full my-1 text-sm
+                    disabled:bg-gray-400 disabled:cursor-not-allowed'
+                    onClick={handleLeaveRoom}
+                    disabled={game || !roomId ? true : false}
+                    title={'Leave room'}
+                ></AnimateButton>
+            </div>
         </>
     );
 }

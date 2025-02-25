@@ -1,33 +1,17 @@
 import { VALID_COORD } from './constants';
 import { FLEET_COUNT } from '../utils/constants';
 
-// return class style for square
-export function getStyle(start = false, disabled = false, ship = false) {
-    if (disabled) {
-        return 'square-disabled square';
-    }
-    if (ship && ship !== '•') {
-        return 'square-panel square';
-    }
-
-    return 'square';
-}
-
 // return obj ships coordinate -> ship : [1,2,3,4]
-export function getShipCoord(arr, all = false) {
-    const allCoord = [];
+function getShipCoord(arr) {
     const result = arr.reduce((acc, curr, i) => {
         if (curr) {
             if (!acc[curr]) {
                 acc[curr] = [];
             }
-            if (all && curr !== '•') allCoord.push(i);
             acc[curr].push(i);
         }
         return acc;
     }, {});
-    if (all) return allCoord;
-
     return result;
 }
 
@@ -115,14 +99,4 @@ export function checkRoomIdData() {
     }
     deleteLocalStorageReconnectData();
     return false;
-}
-
-export function getHashCode(string) {
-    let hash = 0;
-    for (let i = 0; i < string.length; i++) {
-        const chr = string.charCodeAt(i);
-        hash = (hash << 5) - hash + chr;
-        hash |= 0;
-    }
-    return hash;
 }

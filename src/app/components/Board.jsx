@@ -1,13 +1,7 @@
 'use client';
 import Square from './Square';
 import { useEffect } from 'react';
-import {
-    getStyle,
-    markerMiss,
-    updateLocalStorageGameData,
-    getHashCode,
-    getShipCoord,
-} from '../utils/utils';
+import { markerMiss, updateLocalStorageGameData } from '../utils/utils';
 import {
     validatePlace,
     getValidLocalStorageBoard,
@@ -22,21 +16,18 @@ function getBoard(squares, disabled = false, handleClick, start = false) {
         const row = [];
         for (let colIndex = 0; colIndex < 10; colIndex++) {
             const index = rowIndex * 10 + colIndex;
-            const styleClass = getStyle(start, disabled, squares[index]);
-
             row.push(
                 <Square
                     key={index}
                     value={index}
                     disabled={disabled}
                     onSquareClick={handleClick}
-                    className={styleClass}
                     text={squares[index]}
                 />
             );
         }
         rows.push(
-            <div key={rowIndex} className='board-row'>
+            <div key={rowIndex} className='flex'>
                 {row}
             </div>
         );
@@ -66,13 +57,11 @@ export default function Board() {
         roomId,
         game,
         gameId,
-        motion,
+        playerMove,
         setEnemyBoard,
         move,
         setMove,
         stop,
-        player1,
-        player2,
     } = gameState((state) => state);
     const { id, username } = userStore((state) => state);
     useEffect(() => {
@@ -91,13 +80,16 @@ export default function Board() {
             if (!roomId) {
                 return;
             }
+            if (squares[shot] === 'X' || squares[shot] === '•') {
+                return;
+            }
             let marker = '•';
             if (squares[shot]) {
                 marker = 'X';
                 socket.emit('setTimer', TIME_FOR_MOTION);
             }
             if (marker === '•') {
-                socket.emit('changeMotion', motion);
+                socket.emit('changeMotion', playerMove);
             }
             socket.emit('hitOrMiss', [shot, squares[shot]]);
             const newValues = [...squares];
@@ -117,7 +109,7 @@ export default function Board() {
 
         socket.on('shot', handleShot);
         return () => socket.off('shot', handleShot);
-    }, [squares, myBoard, motion]);
+    }, [squares, myBoard, playerMove]);
 
     useEffect(() => {
         // update board 2 if player do shot
@@ -136,11 +128,10 @@ export default function Board() {
 
             const destroyShips = checkGame(newEnemyBoard, newValues);
             if (destroyShips.length === 10) {
-                const allCoord = getShipCoord(newEnemyBoard, true);
-                const hash = getHashCode(JSON.stringify(allCoord));
-                socket.emit('checkWinnerState', {
-                    opponentName: username === player1 ? player2 : player1,
-                    enemyHash: hash,
+                socket.emit('setWinner', {
+                    winnerId: id,
+                    winnerName: username,
+                    gameId,
                 });
             }
             if (destroyShips.length) {
@@ -205,35 +196,49 @@ export default function Board() {
     const board2 = getBoard(squaresBoard2, !game || stop, handleClickBorad2);
 
     return (
-        <div className='board-container'>
-            <div className='board'>
-                <div className='board-header'>
-                    <div className='board-header-cell'></div>
+        <div className='lg:flex'>
+            <div className='flex-col m-2'>
+                <div className='flex'>
+                    <div className='flex items-center w-[34px] h-[34px] justify-center'></div>
                     {CHAR_LIST.map((char, index) => (
-                        <div key={index} className='board-header-cell'>
+                        <div
+                            key={index}
+                            className='flex items-center w-[34px] h-[34px] justify-center font-bold text-xl'
+                        >
                             {char}
                         </div>
                     ))}
                 </div>
                 {board.map((row, rowIndex) => (
-                    <div key={rowIndex} className='board-row'>
-                        <div className='board-header-cell'>{rowIndex + 1}</div>
+                    <div key={rowIndex} className='flex'>
+                        <div className='flex items-center w-[34px] h-[34px] justify-center'>
+                            <span className='font-bold text-xl w-6'>
+                                {rowIndex + 1}
+                            </span>
+                        </div>
                         {row}
                     </div>
                 ))}
             </div>
-            <div className='board'>
-                <div className='board-header'>
-                    <div className='board-header-cell'></div>
+            <div className='flex-col m-2'>
+                <div className='flex'>
+                    <div className='flex items-center w-[34px] h-[34px] justify-center'></div>
                     {CHAR_LIST.map((char, index) => (
-                        <div key={index} className='board-header-cell'>
+                        <div
+                            key={index}
+                            className='flex items-center w-[34px] h-[34px] justify-center font-bold text-xl'
+                        >
                             {char}
                         </div>
                     ))}
                 </div>
                 {board2.map((row, rowIndex) => (
-                    <div key={rowIndex} className='board-row'>
-                        <div className='board-header-cell'>{rowIndex + 1}</div>
+                    <div key={rowIndex} className='flex'>
+                        <div className='flex items-center w-[34px] h-[34px] justify-center'>
+                            <span className='font-bold text-xl w-6'>
+                                {rowIndex + 1}
+                            </span>
+                        </div>
                         {row}
                     </div>
                 ))}

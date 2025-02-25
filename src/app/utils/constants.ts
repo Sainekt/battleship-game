@@ -29,10 +29,16 @@ export const FLEET_COUNT = {
     '•': 80,
 };
 export const FLEET = [
-    { id: 4, size: 4, quantity: 1, type: ['A'] },
-    { id: 3, size: 3, quantity: 2, type: ['B', 'C'] },
-    { id: 2, size: 2, quantity: 3, type: ['D', 'E', 'F'] },
-    { id: 1, size: 1, quantity: 4, type: ['G', 'H', 'I', 'J'] },
+    { id: 4, name: 'Battleship', size: 4, quantity: 1, type: ['A'] },
+    { id: 3, name: 'Cruiser', size: 3, quantity: 2, type: ['B', 'C'] },
+    { id: 2, name: 'Destroyer', size: 2, quantity: 3, type: ['D', 'E', 'F'] },
+    {
+        id: 1,
+        name: 'Torpedo boat',
+        size: 1,
+        quantity: 4,
+        type: ['G', 'H', 'I', 'J'],
+    },
 ];
 
 export const VALID_COORD = {

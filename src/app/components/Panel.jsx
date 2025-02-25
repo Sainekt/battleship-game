@@ -1,12 +1,9 @@
 'use client';
+import { AnimateButton } from './AnimateButton';
 import Square from './Square';
 import { gameState, userStore, useStore } from '../context/Context';
-import useSendGameState from '../hooks/useSendGameState';
-import { socket } from '../components/Room';
-import { getHashCode, getShipCoord } from '../utils/utils';
 import { useState } from 'react';
-import Notification from './Notification';
-
+import useSendGameState from '../hooks/useSendGameState';
 export default function Panel() {
     useSendGameState();
 
@@ -31,19 +28,17 @@ export default function Panel() {
         game,
         player2,
     } = gameState((state) => state);
-
     const { username } = userStore((state) => state);
-    const [errorNotification, setErrorNotification] = useState(false);
+    const [shipName, setShipName] = useState(null);
 
     function getSquare(size, have) {
         const squares = [];
-
         for (let i = 0; i < size; i++) {
             squares.push(
                 <Square
                     key={i}
-                    className={have - i > 0 ? 'square-panel square' : 'square'}
                     value={size}
+                    text={have - i > 0 ? have : null}
                     onSquareClick={() => choiceShip(size)}
                 />
             );
@@ -55,17 +50,12 @@ export default function Panel() {
         const selectedShip = fleet.find((select) => select.id === id);
         const prevShip = fleet.find((select) => select.id === +ship);
         if (prevShip) {
-            if (prevShip.size === 0) {
-                setShip(selectedShip.id);
-            } else if (prevShip.size !== prevShip.id) {
-                setShip(prevShip.id);
-            } else {
-                setShip(selectedShip.id);
+            if (prevShip.size !== prevShip.id && prevShip.size !== 0) {
+                return;
             }
         }
-        if (!ship) {
-            setShip(selectedShip.id);
-        }
+        setShip(selectedShip.id);
+        setShipName(selectedShip.name);
     }
 
     function handleReset() {
@@ -78,11 +68,6 @@ export default function Panel() {
     }
 
     function handleReady() {
-        const allCoords = getShipCoord(squares, true);
-        if (allCoords.length !== 20) {
-            setErrorNotification(true);
-            return;
-        }
         if (allShipPlaced && roomId && player2) {
             setReady();
             if (username == roomId) {
@@ -90,43 +75,55 @@ export default function Panel() {
             } else {
                 setPlayer2Ready(!ready);
             }
-            const hash = getHashCode(JSON.stringify(allCoords));
-            socket.emit('saveMyBoardHash', hash);
             setMyBoard(squares);
         }
     }
     return (
         <>
-            {errorNotification ? (
-                <Notification
-                    handleNotification={() => setErrorNotification(false)}
-                    data={{
-                        title: 'Error',
-                        text: 'You have to place all ships on the board',
-                    }}
-                />
-            ) : null}
-            {ship ? <h2>selected: size {ship}</h2> : null}
-            {fleet.map((el, i) => {
-                return (
-                    <div key={i}>
-                        <h4>Quantity: {el.quantity}</h4>
-                        <div>{getSquare(el.id, el.size)}</div>
+            <div className=' bg-gray-50 border rounded-lg p-3 m-2 min-w-48'>
+                <div className='rounded-lg p-1 border-2 bg-white'>
+                    <span className='font-bold text-gray-800'>Selected:</span>{' '}
+                    <span className='text-blue-500'>{shipName}</span>
+                </div>
+                {fleet.map((el, i) => {
+                    return (
+                        <div key={i} className=''>
+                            <div className='flex-row'>
+                                <span className='font-bold text-gray-800'>
+                                    Qty:
+                                </span>{' '}
+                                <span className='mr-2'>{el.quantity}</span>
+                                <span className=' text-blue-500'>
+                                    {el.name}
+                                </span>
+                            </div>
+                            <div>{getSquare(el.id, el.size)}</div>
+                        </div>
+                    );
+                })}
+                <div className='flex'>
+                    <div className='grow mr-1'>
+                        <AnimateButton
+                            className='bg-blue-500 w-full rounded-full hover:bg-blue-600 text-white disabled:bg-gray-400 disabled:cursor-not-allowed'
+                            onClick={handleReset}
+                            disabled={ready}
+                            title={'Reset'}
+                        />
                     </div>
-                );
-            })}
-            {ready ? <p>you are ready</p> : <p>you are don't ready</p>}
-            <button onClick={handleReset} disabled={ready}>
-                RESET
-            </button>
-            <button
-                onClick={handleReady}
-                disabled={
-                    allShipPlaced && roomId && player2 && !game ? false : true
-                }
-            >
-                {ready ? 'UNREADY' : 'READY'}
-            </button>
+                    <div className='grow ml-1'>
+                        <AnimateButton
+                            className='bg-blue-500 rounded-full w-full hover:bg-blue-600 text-white disabled:bg-gray-400 disabled:cursor-not-allowed'
+                            onClick={handleReady}
+                            disabled={
+                                allShipPlaced && roomId && player2 && !game
+                                    ? false
+                                    : true
+                            }
+                            title={ready ? 'Unready' : 'Ready'}
+                        />
+                    </div>
+                </div>
+            </div>
         </>
     );
 }

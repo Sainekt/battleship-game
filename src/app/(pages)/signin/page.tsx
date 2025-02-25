@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { setCookieToken } from '../../security/token';
 import { useRouter } from 'next/navigation';
 import { socket } from '../../components/Room';
+import { AnimateButton } from '../../components/AnimateButton';
+import classNames from 'classnames';
 
 export default function SignUp() {
     const [username, setUsername] = useState('');
@@ -29,67 +31,105 @@ export default function SignUp() {
         }
         setError(data.error);
         if (response.status >= 400) {
-            setUsernameErr(data.username);
-            setPasswordErr(data.password);
+            setUsernameErr(data.data.username);
+            setPasswordErr(data.data.password);
         }
     }
 
     return (
-        <div className='container'>
-            <form method='POST'>
-                <div>
-                    <label htmlFor='username'>Enter your username:</label>
-                    <br />
-                    <input
-                        type='text'
-                        name='username'
-                        id='username'
-                        required
-                        placeholder='username'
-                        value={username}
-                        onChange={(e) => {
-                            setUsernameErr(null);
-                            setUsername(e.target.value);
-                            setError(null);
-                        }}
-                    />
-                    {usernameErr ? (
-                        <p style={{ color: 'red' }}>{usernameErr}</p>
-                    ) : (
-                        <p></p>
-                    )}
+        <div className='flex items-center justify-center min-h-screen bg-gray-100'>
+            <div className='bg-white p-8 rounded-lg shadow-md w-96'>
+                <meta
+                    name='viewport'
+                    content='width=device-width, initial-scale=1.0'
+                />
+                <div className='text-center mb-6'>
+                    <h1 className='text-2xl font-bold text-gray-700'>
+                        Sign in
+                    </h1>
                 </div>
-                <div>
-                    <label htmlFor='password'>Enter your password:</label>
-                    <br />
-                    <input
-                        type='password'
-                        name='password'
-                        id='password'
-                        required
-                        placeholder='password'
-                        value={password}
-                        onChange={(e) => {
-                            setPassword(e.target.value);
-                            setPasswordErr(null);
-                        }}
-                    />
-                    {passwordErr ? (
-                        <p style={{ color: 'red' }}>{passwordErr}</p>
-                    ) : (
-                        <p></p>
+                <form method='POST'>
+                    <div className='mb-4'>
+                        <label
+                            className='block text-sm font-medium text-gray-700'
+                            htmlFor='username'
+                        >
+                            Username:
+                        </label>
+                        <input
+                            type='text'
+                            name='username'
+                            id='username'
+                            required
+                            placeholder='username'
+                            value={username}
+                            onChange={(e) => {
+                                setUsernameErr(null);
+                                setUsername(e.target.value);
+                                setError(null);
+                            }}
+                            className={classNames('input-field', {
+                                'border-gray-300 focus:ring-blue-500':
+                                    !usernameErr,
+                                'focus:ring-red-500 border-red-500':
+                                    usernameErr,
+                            })}
+                        />
+                        {usernameErr && (
+                            <p className='text-red-500 text-sm'>
+                                {usernameErr}
+                            </p>
+                        )}
+                    </div>
+
+                    <div className='mb-4'>
+                        <label
+                            className='block text-sm font-medium text-gray-700'
+                            htmlFor='password'
+                        >
+                            Password:
+                        </label>
+                        <input
+                            type='password'
+                            name='password'
+                            id='password'
+                            required
+                            placeholder='password'
+                            value={password}
+                            onChange={(e) => {
+                                setPassword(e.target.value);
+                                setPasswordErr(null);
+                            }}
+                            className={classNames('input-field', {
+                                'border-gray-300 focus:ring-blue-500':
+                                    !passwordErr,
+                                'focus:ring-red-500 border-red-500':
+                                    passwordErr,
+                            })}
+                        />
+                        {passwordErr && (
+                            <p className='text-red-500 text-sm'>
+                                {passwordErr}
+                            </p>
+                        )}
+                    </div>
+
+                    {error && (
+                        <p className='text-red-500 text-sm mb-4'>{error}</p>
                     )}
-                </div>
-                {error ? <p style={{ color: 'red' }}>{error}</p> : null}
-                <div>
-                    <input
-                        type='submit'
-                        value='Sign in'
+
+                    <AnimateButton
+                        title='Login'
+                        className='w-full bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600'
                         onClick={handleClick}
                     />
+                </form>
+                <div className='flex justify-center'>
+                    <div className='flex justify-center text-center text-blue-500 p-1 m-1 w-20 cursor-pointer rounded-full hover:border hover:border-blue-500 transition duration-500'>
+                        <Link href={'/signup'}>Sign Up!</Link>
+                    </div>
                 </div>
-            </form>
-            <Link href={'/signup'}>Don't you have an account yet?</Link>
+            </div>
         </div>
     );
 }

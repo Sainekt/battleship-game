@@ -27,7 +27,6 @@ app.prepare().then(() => {
         },
     });
     const CLOSED_ROOMS = new Set();
-    const PlayersBoards = {};
     io.on('connection', (socket) => {
         console.log(`Connected ${socket.id}`);
 
@@ -43,17 +42,6 @@ app.prepare().then(() => {
         });
         socket.on('setReconnectState', (state) => {
             socket.to(socket.roomId).emit('setReconnectState', state);
-        });
-
-        socket.on('checkGameSquares', (hash) => {
-            const startSquaresHash = PlayersBoards[socket.username];
-            if (startSquaresHash !== hash) {
-                handleCheating(socket, false);
-            }
-        });
-
-        socket.on('clientError', () => {
-            socket.to(socket.roomId).emit('tehnicalWin');
         });
 
         // room and connect
@@ -131,31 +119,10 @@ app.prepare().then(() => {
         });
 
         // Game
-        socket.on('saveMyBoardHash', (squares) => {
-            PlayersBoards[socket.username] = squares;
-        });
         socket.on('shot', (shot) => {
             socket.to(socket.roomId).emit('shot', shot);
         });
         socket.on('hitOrMiss', (shot) => {
-            const validShipId = {
-                A: 'A',
-                B: 'B',
-                C: 'C',
-                D: 'D',
-                E: 'E',
-                F: 'F',
-                G: 'G',
-                H: 'H',
-                I: 'I',
-                J: 'J',
-                null: true,
-            };
-            const [index, shipId] = shot;
-            if (!validShipId[shipId]) {
-                handleCheating(socket, false);
-            }
-
             socket.to(socket.roomId).emit('hitOrMiss', shot);
         });
 
@@ -166,15 +133,15 @@ app.prepare().then(() => {
         socket.on('sendState', (gameState) => {
             socket.to(socket.roomId).emit('sendState', gameState);
         });
-        socket.on('setMotion', (users) => {
+        socket.on('setPlayerMove', (users) => {
             const player = users[Math.floor(Math.random() * users.length)];
-            io.to(socket.roomId).emit('setMotion', player);
+            io.to(socket.roomId).emit('setPlayerMove', player);
         });
         socket.on('setTimer', (time) => {
             io.to(socket.roomId).emit('setTimer', time);
         });
-        socket.on('changeMotion', (motion) => {
-            io.to(socket.roomId).emit('changeMotion', motion);
+        socket.on('changeMotion', (playerMove) => {
+            io.to(socket.roomId).emit('changeMotion', playerMove);
         });
         socket.on('createGame', ({ player1, player2 }) => {
             fetch(`${DOMAIN}/api/games/`, {
@@ -196,22 +163,10 @@ app.prepare().then(() => {
                     io.to(socket.roomId).emit('setGameId', false);
                 });
         });
-        socket.on('checkWinnerState', ({ opponentName, enemyHash }) => {
-            const opponentHash = PlayersBoards[opponentName];
-            if (opponentHash !== enemyHash) {
-                handleCheating(socket, true);
-            } else {
-                socket.emit('acceptWin');
-            }
-        });
-
         socket.on('setWinner', ({ winnerId, winnerName, gameId }) => {
             updateGame(gameId, winnerId);
             CLOSED_ROOMS.delete(socket.roomId);
             io.to(socket.roomId).emit('setWinner', { winnerName });
-        });
-        socket.on('tehnicalWin', () => {
-            socket.to(socket.roomId).emit('tehnicalWin');
         });
         socket.on('checkStart', (status) => {
             if (status) {
@@ -258,15 +213,4 @@ function updateGame(gameId, winnerId) {
     }).catch((err) => {
         console.error(err);
     });
-}
-
-function handleCheating(socket, final = false) {
-    const text = {
-        reason: 'Data Tampering',
-        details: final
-            ? 'You said you won, but the starting position of the enemy ships does not match the final one!'
-            : 'The positions of the ships have been changed!',
-    };
-    socket.emit('Cheating', text);
-    socket.to(socket.roomId).emit('tehnicalWin');
 }

@@ -122,7 +122,7 @@ export const gameState = create((set, get) => ({
     roomId: null,
     game: false,
     gameId: null,
-    motion: null,
+    playerMove: null,
     move: false,
     timer: 0,
     stop: false,
@@ -130,7 +130,7 @@ export const gameState = create((set, get) => ({
     setGameId: (id) => set({ gameId: id }),
     setMove: (bool) => set({ move: bool }),
     setTimer: (time) => set({ timer: time }),
-    setMotion: (user) => set({ motion: user }),
+    setPlayerMove: (user) => set({ playerMove: user }),
     setGame: (bool) => set({ game: bool }),
     setPlayer1: (id) => set({ player1: id }),
     setPlayer2: (id) => set({ player2: id }),
@@ -150,7 +150,7 @@ export const gameState = create((set, get) => ({
     gameStateReset: () =>
         set({
             game: false,
-            motion: null,
+            playerMove: null,
             timer: 0,
             gameId: null,
             enemyBoard: CLEAR_BOARD,
