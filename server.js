@@ -18,10 +18,6 @@ const HEADERS = {
     authorization: `Bearer ${SYSTEM_TOKEN}`,
 };
 
-if (!DOMAIN || !SYSTEM_TOKEN) {
-    throw new Error('DOMAIN and SYSTEM_TOKEN must be set');
-}
-
 app.prepare().then(() => {
     const httpServer = createServer(handler);
     const io = new Server(httpServer, {
@@ -163,7 +159,7 @@ app.prepare().then(() => {
                     io.to(socket.roomId).emit('setGameId', data);
                 })
                 .catch((err) => {
-                    console.log(err);
+                    console.error(err);
                     io.to(socket.roomId).emit('setGameId', false);
                 });
         });

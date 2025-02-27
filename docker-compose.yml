@@ -1,0 +1,42 @@
+volumes:
+  mysql:
+
+services:
+  battledb:
+    container_name: battledb
+    image: mysql:9.2.0
+    env_file: .env
+    volumes:
+      - mysql:/var/lib/mysql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - battlenetwork
+
+  battleserver:
+    container_name: battleserver
+    env_file: .env
+    restart: unless-stopped
+    build: .
+    depends_on:
+      - battledb
+    networks:
+      - battlenetwork
+      - proxy
+    ports:
+      - '80:3000'
+
+networks:
+  proxy:
+    name: proxy
+    attachable: true
+    external: true
+  battlenetwork:
+    name: battlenetwork
+    attachable: true
+    external: false

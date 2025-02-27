@@ -66,7 +66,7 @@ export async function PATCH(request: Request): Promise<Response> {
             status: 200,
         });
     } catch (err) {
-        console.log(`error from patch user: ${err}`);
+        console.error(`error from patch user: ${err}`);
         return new Response(JSON.stringify({ error: 'get user error' }), {
             status: 500,
             headers: HEADERS,

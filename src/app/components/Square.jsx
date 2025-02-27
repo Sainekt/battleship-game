@@ -1,15 +1,17 @@
 'use client';
 import classNames from 'classnames';
 import Image from 'next/image';
+import fire from '../../../public/fire.gif';
+import explosion from '../../../public/explosion.gif';
 import { useEffect, useState } from 'react';
 
 export default function Square({ value, disabled, onSquareClick, text }) {
-    const [gif, setGif] = useState('/explosion.gif');
+    const [gif, setGif] = useState(explosion);
     useEffect(() => {
         let timeOut;
         if (text === 'X') {
             if (timeOut) clearTimeout(timeOut);
-            timeOut = setTimeout(() => setGif('/fire.gif'), 500);
+            timeOut = setTimeout(() => setGif(fire), 500);
         }
         return () => clearTimeout(timeOut);
     }, [text]);

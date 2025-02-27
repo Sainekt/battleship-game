@@ -7,6 +7,7 @@ const connection = mysql.createConnection({
     user: process.env.MYSQL_USER || 'root',
     password: process.env.MYSQL_PASSWORD,
     database: process.env.MYSQL_DATABASE,
+    port: process.env.MYSQL_TCP_PORT || 3306,
 });
 
 function createTableUsers() {
@@ -22,7 +23,7 @@ function createTableUsers() {
     );`;
     connection.query(sql, (err, results) => {
         if (err) {
-            console.log(err);
+            console.error(err);
         } else {
             console.log(results);
         }
@@ -45,7 +46,7 @@ function createTableGames() {
     );`;
     connection.query(sql, (err, results) => {
         if (err) {
-            console.log(err);
+            console.error(err);
         } else {
             console.log(results);
         }
@@ -115,7 +116,7 @@ export async function getUsersById(id) {
             });
         });
     } catch (err) {
-        console.log(`error: ${err}`);
+        console.error(`error: ${err}`);
     }
 }
 
@@ -226,7 +227,7 @@ export async function createGame(player1_id, player2_id) {
             );
         });
     } catch (err) {
-        console.log(`error: ${err}`);
+        console.error(`error: ${err}`);
     }
 }
 
@@ -247,7 +248,7 @@ export async function updateGame(gameId, status, winnerId, score) {
             );
         });
     } catch (err) {
-        console.log(`error: ${err}`);
+        console.error(`error: ${err}`);
     }
 }
 
@@ -264,7 +265,7 @@ export async function getGameById(id) {
             });
         });
     } catch (err) {
-        console.log(`error: ${err}`);
+        console.error(`error: ${err}`);
     }
 }
 

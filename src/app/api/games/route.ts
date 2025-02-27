@@ -24,7 +24,7 @@ export async function POST(request: Request): Promise<Response> {
             status: 201,
         });
     } catch (error) {
-        console.log(`database error: ${error}`);
+        console.error(`database error: ${error}`);
         return new Response(JSON.stringify({ error: `database error` }), {
             headers: HEADERS,
             status: 500,
