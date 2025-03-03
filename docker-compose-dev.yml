@@ -21,8 +21,11 @@ services:
   battleserver:
     container_name: battleserver
     env_file: .env
+    volumes: 
+      - .:/app
     restart: unless-stopped
-    build: .
+    build: 
+      dockerfile: ./Dockerfile.dev
     depends_on:
       battledb:
         condition: service_healthy

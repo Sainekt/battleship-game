@@ -9,16 +9,19 @@ const nextConfig = {
     },
     crossOrigin: 'use-credentials',
     webpack: (config) => {
-        return {
-            ...config,
-            cache: {
-                type: 'filesystem',
-                buildDependencies: {
-                    config: [path.resolve('next.config.mjs')],
+        if (process.env.NODE_ENV !== 'development') {
+            return {
+                ...config,
+                cache: {
+                    type: 'filesystem',
+                    buildDependencies: {
+                        config: [path.resolve('next.config.mjs')],
+                    },
+                    name: 'nextjs-build-cache',
                 },
-                name: 'nextjs-build-cache',
-            },
-        };
+            };
+        }
+        return config;
     },
     output: 'standalone',
 };

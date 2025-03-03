@@ -208,7 +208,7 @@ export default function SignUp() {
                 </form>
                 <div className='flex justify-center'>
                     <div className='flex justify-center text-center text-blue-500 p-1 m-1 w-20 cursor-pointer rounded-full hover:border hover:border-blue-500 transition duration-500'>
-                        <Link href={'/signin'}>Sign in!</Link>{' '}
+                        <Link href={'/signin'}>Sign In!</Link>{' '}
                     </div>
                 </div>
             </div>

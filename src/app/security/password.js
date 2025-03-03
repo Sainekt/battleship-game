@@ -1,9 +1,17 @@
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
 
 export async function hashPassword(password) {
-    return await bcrypt.hash(password, 10);
+    try {
+        return await bcrypt.hash(password, 10);
+    } catch (error) {
+        console.error(error);
+    }
 }
 
 export async function comparePassword(password, hashPassword) {
-    return await bcrypt.compare(password, hashPassword);
+    try {
+        return await bcrypt.compare(password, hashPassword);
+    } catch (error) {
+        console.error(error);
+    }
 }

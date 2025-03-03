@@ -5,76 +5,33 @@ import { hashPassword } from '../security/password.js';
 const connection = mysql.createConnection({
     host: process.env.DB_HOST,
     user: process.env.MYSQL_USER || 'root',
-    password: process.env.MYSQL_PASSWORD,
+    password: process.env.MYSQL_ROOT_PASSWORD,
     database: process.env.MYSQL_DATABASE,
     port: process.env.MYSQL_TCP_PORT || 3306,
 });
 
-function createTableUsers() {
-    const sql = `CREATE TABLE IF NOT EXISTS users (
-        id INT PRIMARY KEY AUTO_INCREMENT,
-        username VARCHAR(255) NOT NULL,
-        email VARCHAR(255),
-        password VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        CONSTRAINT unique_username UNIQUE (username),
-        CONSTRAINT unique_email UNIQUE (email)
-    );`;
-    connection.query(sql, (err, results) => {
-        if (err) {
-            console.error(err);
-        } else {
-            console.log(results);
-        }
-    });
-}
-
-function createTableGames() {
-    const sql = `CREATE TABLE IF NOT EXISTS games (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    player_1 INT NOT NULL,
-    player_2 INT NOT NULL,
-    winner INT,
-    status VARCHAR(50),
-    score INT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (player_1) REFERENCES users(id),
-    FOREIGN KEY (player_2) REFERENCES users(id),
-    FOREIGN KEY (winner) REFERENCES users(id)
-    );`;
-    connection.query(sql, (err, results) => {
-        if (err) {
-            console.error(err);
-        } else {
-            console.log(results);
-        }
-    });
-}
-
-function createTables() {
-    createTableUsers();
-    createTableGames();
-    connection.end();
-}
-// users
+// =============== User ===============
 export async function createUser(username, password, email = null) {
-    const hashedPassword = await hashPassword(password);
-    return new Promise((resolve, reject) => {
-        const sql = `INSERT INTO users(username, password, email) VALUES(?, ?, ?)`;
-        connection.query(
-            sql,
-            [username, hashedPassword, email],
-            (err, result) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
+    try {
+        const hashedPassword = await hashPassword(password);
+
+        return new Promise((resolve, reject) => {
+            const sql = `INSERT INTO users(username, password, email) VALUES(?, ?, ?)`;
+            connection.query(
+                sql,
+                [username, hashedPassword, email],
+                (err, result) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(result);
+                    }
                 }
-            }
-        );
-    });
+            );
+        });
+    } catch (error) {
+        console.error(error);
+    }
 }
 
 export async function getUserByUsername(username) {
@@ -207,7 +164,7 @@ export async function updateUser(id, data) {
     }
 }
 
-// games
+// =============== Games ===============
 export async function createGame(player1_id, player2_id) {
     try {
         const playerId = player1_id;
