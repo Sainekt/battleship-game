@@ -1,26 +1,24 @@
 import { createServer } from 'node:http';
 import next from 'next';
 import { Server } from 'socket.io';
-import pkg from '@next/env';
-const { loadEnvConfig } = pkg;
-const dir = process.cwd();
-loadEnvConfig(dir);
+import { SignJWT } from 'jose';
 
 const dev = process.env.NODE_ENV !== 'production';
 const HOSTNAME = '0.0.0.0';
-const PORT = 3000;
+const DOMAIN = 'http://localhost:3000';
+const PORT = process.env.PORT || 3000;
 const app = next({ dev, HOSTNAME, PORT });
 const handler = app.getRequestHandler();
-const DOMAIN = process.env.DOMAIN;
-const SYSTEM_TOKEN = process.env.SYSTEM_TOKEN;
+const SECRET_KEY = new TextEncoder().encode(process.env.SECRET_KEY);
+
+if (!SECRET_KEY) {
+    throw new Error('SECRET_KEY is not set');
+}
+
 const HEADERS = {
     'Content-Type': 'application/json',
-    authorization: `Bearer ${SYSTEM_TOKEN}`,
+    authorization: `Bearer ${await generateToken()}`,
 };
-
-if (!DOMAIN || !SYSTEM_TOKEN) {
-    throw new Error('DOMAIN and SYSTEM_TOKEN must be set');
-}
 
 app.prepare().then(() => {
     const httpServer = createServer(handler);
@@ -48,7 +46,7 @@ app.prepare().then(() => {
             socket.to(socket.roomId).emit('setReconnectState', state);
         });
 
-        // room and connect
+        // =============== room and connect ===============
         socket.on('createRoom', (username) => {
             CLOSED_ROOMS.delete(username);
             socket.username = username;
@@ -122,7 +120,7 @@ app.prepare().then(() => {
             socket.to(socket.roomId).emit('playerDisconnect', socket.username);
         });
 
-        // Game
+        // =============== Game ===============
         socket.on('shot', (shot) => {
             socket.to(socket.roomId).emit('shot', shot);
         });
@@ -163,7 +161,7 @@ app.prepare().then(() => {
                     io.to(socket.roomId).emit('setGameId', data);
                 })
                 .catch((err) => {
-                    console.log(err);
+                    console.error(err);
                     io.to(socket.roomId).emit('setGameId', false);
                 });
         });
@@ -181,7 +179,7 @@ app.prepare().then(() => {
             io.to(socket.roomId).emit('checkStart', status);
         });
 
-        // Rematch
+        // =============== Rematch ===============
         socket.on('rematch', () => {
             socket.to(socket.roomId).emit('rematch');
         });
@@ -217,4 +215,15 @@ function updateGame(gameId, winnerId) {
     }).catch((err) => {
         console.error(err);
     });
+}
+
+async function generateToken() {
+    const data = { username: 'system' };
+    const alg = 'HS256';
+    const token = await new SignJWT(data)
+        .setProtectedHeader({ alg })
+        .setIssuedAt()
+        .setExpirationTime('1y')
+        .sign(SECRET_KEY);
+    return token;
 }

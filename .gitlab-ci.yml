@@ -1,0 +1,28 @@
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+  - template:  Security/Container-Scanning.gitlab-ci.yml
+
+build:
+  stage: build
+  image: docker:25.0.3-git
+  except:
+    - tag
+  script:
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+    - docker build -t $CI_REGISTRY_IMAGE -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA .
+    - docker push $CI_REGISTRY_IMAGE --all-tags
+  tags:
+    - docker
+  only:
+    - main
+
+secret_detection:
+  variables:
+    SECRET_DETECTION_HISTORIC_SCAN: 'true'
+
+container_scanning:
+  variables:
+    CS_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"

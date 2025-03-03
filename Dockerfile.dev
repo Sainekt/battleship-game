@@ -1,0 +1,12 @@
+FROM node:23-bookworm AS base
+
+ENV NODE_ENV development
+ENV TZ ${TZ:-Europe/Moscow}
+
+RUN mkdir -p /app/node_modules && chown -R node:node /app
+USER node
+WORKDIR /app
+
+EXPOSE 80
+
+CMD ["sh", "./start.sh"] 
