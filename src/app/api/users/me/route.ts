@@ -6,7 +6,7 @@ import {
 } from '../../../db/connection';
 import { decodeToken } from '../../../security/token';
 import { getTokenInRequest } from '../../../utils/utils';
-import { hashPassword, comparePassword } from '../../../security/password';
+import { comparePassword } from '../../../security/password';
 import { validateChangeUserData } from '../../../utils/validatorsServer';
 
 export async function GET(request: Request): Promise<Response> {
@@ -19,6 +19,7 @@ export async function GET(request: Request): Promise<Response> {
             headers: HEADERS,
         });
     } catch (err) {
+        console.error('GET api/users/me error:', err);
         return new Response(JSON.stringify({ error: 'get user error' }), {
             status: 500,
             headers: HEADERS,
@@ -50,7 +51,7 @@ export async function PATCH(request: Request): Promise<Response> {
         const data = {};
         for (const key in validatedData.data) {
             if (key === 'newPassword')
-                data['password'] = await hashPassword(validatedData.data[key]);
+                data['password'] = validatedData.data[key];
             else data[key] = validatedData.data[key];
         }
         const result = await updateUser(userData.id, data);
@@ -66,10 +67,23 @@ export async function PATCH(request: Request): Promise<Response> {
             status: 200,
         });
     } catch (err) {
-        console.error(`error from patch user: ${err}`);
-        return new Response(JSON.stringify({ error: 'get user error' }), {
-            status: 500,
-            headers: HEADERS,
-        });
+        console.error(`PATCH api/users/me error: ${err}`);
+        if (err.code === 'ER_DUP_ENTRY') {
+            return new Response(
+                JSON.stringify({ email: 'Email already exists' }),
+                {
+                    status: 400,
+                    headers: HEADERS,
+                }
+            );
+        } else {
+            return new Response(
+                JSON.stringify({ error: 'Server error, try again later.' }),
+                {
+                    status: 500,
+                    headers: HEADERS,
+                }
+            );
+        }
     }
 }

@@ -5,19 +5,27 @@ import { cookies } from 'next/headers';
 const SECRET_KEY = new TextEncoder().encode(process.env.SECRET_KEY);
 
 export async function generateToken(username) {
-    const data = { username: username };
-    const alg = 'HS256';
-    const token = await new jose.SignJWT(data)
-        .setProtectedHeader({ alg })
-        .setIssuedAt()
-        .setExpirationTime('30d')
-        .sign(SECRET_KEY);
-    return token;
+    try {
+        const data = { username: username };
+        const alg = 'HS256';
+        const token = await new jose.SignJWT(data)
+            .setProtectedHeader({ alg })
+            .setIssuedAt()
+            .setExpirationTime('30d')
+            .sign(SECRET_KEY);
+        return token;
+    } catch (error) {
+        console.error('Error generating token:', error);
+    }
 }
 
 export async function decodeToken(token) {
-    const decoded = await jose.jwtVerify(token, SECRET_KEY);
-    return decoded.payload;
+    try {
+        const decoded = await jose.jwtVerify(token, SECRET_KEY);
+        return decoded.payload;
+    } catch (error) {
+        console.error('Error decoding token:', error);
+    }
 }
 
 export async function setCookieToken(token) {

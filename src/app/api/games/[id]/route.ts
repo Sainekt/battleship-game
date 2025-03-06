@@ -20,6 +20,7 @@ export async function GET(
             status: 200,
         });
     } catch (err) {
+        console.error('GET api/games/[id] error:', err);
         return new Response(JSON.stringify({ error: err.message }), {
             headers: HEADERS,
             status: 500,
@@ -60,6 +61,7 @@ export async function PATCH(
             status: 200,
         });
     } catch (err) {
+        console.error('PATCH api/games/[id] eror:', err);
         return new Response(JSON.stringify({ error: err.message }), {
             headers: HEADERS,
             status: 500,

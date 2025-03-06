@@ -14,7 +14,7 @@ export async function signInMiddleware(request: NextRequest) {
         if (tokenIsValid && bearer === 'Bearer') {
             return NextResponse.redirect(new URL('/', request.url));
         }
-    } catch (error) {
+    } catch {
         return NextResponse.next();
     }
 }

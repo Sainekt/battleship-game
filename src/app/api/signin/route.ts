@@ -52,8 +52,11 @@ export async function POST(request: Request): Promise<Response> {
             headers: HEADERS,
         });
     } catch (error) {
+        console.error('POST api/signin error:', error);
         return new Response(
-            JSON.stringify({ error: 'sorry, try again later' }),
+            JSON.stringify({
+                data: { error: 'Server error, try again later.' },
+            }),
             {
                 status: 500,
                 headers: HEADERS,

@@ -46,7 +46,9 @@ export async function validateToken(token: string): Promise<Boolean> {
         if (expred > 0) {
             return true;
         }
-    } catch {}
+    } catch (err) {
+        console.error('Presentation of an invalid token', err);
+    }
     return false;
 }
 

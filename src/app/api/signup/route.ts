@@ -1,5 +1,4 @@
 'use server';
-
 import {
     validateSignUpSignIn,
     validateJson,
@@ -25,17 +24,31 @@ export async function POST(request: Request): Promise<Response> {
     }
     try {
         await createUser(username, password, email);
+        return new Response(null, { status: 201, headers: HEADERS });
     } catch (error) {
-        return new Response(
-            JSON.stringify({
-                success: false,
-                data: { error: 'username or email is already exists' },
-            }),
-            {
-                status: 400,
-                headers: HEADERS,
-            }
-        );
+        console.error('POST api/signup error:', error);
+        if (error.code === 'ER_DUP_ENTRY') {
+            return new Response(
+                JSON.stringify({
+                    success: false,
+                    data: { error: 'username or email is already exists' },
+                }),
+                {
+                    status: 400,
+                    headers: HEADERS,
+                }
+            );
+        } else {
+            return new Response(
+                JSON.stringify({
+                    success: false,
+                    data: { error: 'Server error, try again later.' },
+                }),
+                {
+                    status: 500,
+                    headers: HEADERS,
+                }
+            );
+        }
     }
-    return new Response(null, { status: 201, headers: HEADERS });
 }

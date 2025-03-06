@@ -21,6 +21,7 @@ export async function ApiMiddleware(request: NextRequest) {
         }
         return NextResponse.next();
     } catch (error) {
+        console.error(error);
         return new Response(JSON.stringify({ detail: 'Forbidden' }), {
             headers: HEADERS,
             status: 403,

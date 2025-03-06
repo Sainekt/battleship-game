@@ -29,10 +29,10 @@ export default function SignUp() {
             socket.connect();
             router.push('/');
         }
-        setError(data.error);
         if (response.status >= 400) {
             setUsernameErr(data.data.username);
             setPasswordErr(data.data.password);
+            setError(data.data.error);
         }
     }
 
@@ -113,9 +113,10 @@ export default function SignUp() {
                             </p>
                         )}
                     </div>
-
                     {error && (
-                        <p className='text-red-500 text-sm mb-4'>{error}</p>
+                        <div className='text-red-500 text-sm mb-4 text-center'>
+                            {error}
+                        </div>
                     )}
 
                     <AnimateButton

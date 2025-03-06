@@ -53,13 +53,11 @@ export default function SignUp() {
             return router.push('/signin');
         }
         const data = await response.json();
-        if (data.data.error) {
-            setError(data.data.error);
-        }
         if (response.status >= 400) {
             setUsernameErr(data.data.username);
             setPasswordErr(data.data.password);
             setEmailErr(data.data.email);
+            setError(data.data.error);
         }
     }
 
@@ -81,7 +79,7 @@ export default function SignUp() {
                             className='block text-sm font-medium text-gray-700'
                             htmlFor='username'
                         >
-                            Enter your username:
+                            Enter your username:*
                         </label>
                         <input
                             type='text'
@@ -113,7 +111,7 @@ export default function SignUp() {
                             className='block text-sm font-medium text-gray-700'
                             htmlFor='password'
                         >
-                            Enter your password:
+                            Enter your password:*
                         </label>
                         <input
                             type='password'
@@ -143,7 +141,7 @@ export default function SignUp() {
                             className='block text-sm font-medium text-gray-700'
                             htmlFor='confirmPassword'
                         >
-                            Confirm your password:
+                            Confirm your password:*
                         </label>
                         <input
                             type='password'
@@ -179,7 +177,7 @@ export default function SignUp() {
                             type='email'
                             name='email'
                             id='email'
-                            placeholder='not required'
+                            placeholder='email'
                             value={email}
                             onChange={(e) => {
                                 setEmail(e.target.value);
@@ -195,10 +193,12 @@ export default function SignUp() {
                         {emailErr && (
                             <p className='text-red-500 text-sm'>{emailErr}</p>
                         )}
+                        {error && (
+                            <div className='text-red-500 text-sm text-center mt-4'>
+                                {error}
+                            </div>
+                        )}
                     </div>
-                    {error && (
-                        <p className='text-red-500 text-sm mb-4'>{error}</p>
-                    )}
 
                     <AnimateButton
                         title='Registration'

@@ -48,10 +48,6 @@ export default function ChangeProfile() {
             headers: HEADERS,
             body: JSON.stringify(body),
         });
-        if (response.status >= 500) {
-            setError('sorry, server error, please try again later.');
-            return;
-        }
         const data = await response.json();
         if (data.error) {
             setError(data.error);
@@ -61,6 +57,7 @@ export default function ChangeProfile() {
             setPasswordErr(data.password);
             setNewPasswordErr(data.newPassword);
             setEmailErr(data.email);
+            setError(data.error);
             return;
         }
         if (response.status === 200) {
@@ -96,7 +93,7 @@ export default function ChangeProfile() {
                                 className='block text-sm font-medium text-gray-700'
                                 htmlFor='Oldpassword'
                             >
-                                Enter old password:
+                                Enter old password:*
                             </label>
                             <input
                                 type='password'
@@ -119,7 +116,7 @@ export default function ChangeProfile() {
                                 })}
                             />
                             {passwordErr && (
-                                <p className='text-red-500 text-sm'>
+                                <p className='text-red-500 text-sm text-center mt-1'>
                                     {passwordErr}
                                 </p>
                             )}
@@ -155,7 +152,7 @@ export default function ChangeProfile() {
                                         })}
                                     />
                                     {newPasswordErr && (
-                                        <p className='text-red-500 text-sm'>
+                                        <p className='text-red-500 text-sm text-center mt-1'>
                                             {newPasswordErr}
                                         </p>
                                     )}
@@ -184,7 +181,7 @@ export default function ChangeProfile() {
                                         })}
                                     />
                                     {confirmPasswordErr && (
-                                        <p className='text-red-500 text-sm'>
+                                        <p className='text-red-500 text-sm text-center mt-1'>
                                             {confirmPasswordErr}
                                         </p>
                                     )}
@@ -224,7 +221,7 @@ export default function ChangeProfile() {
                                         })}
                                     />
                                     {emailErr && (
-                                        <p className='text-red-500 text-sm'>
+                                        <p className='text-red-500 text-sm text-center mt-1'>
                                             {emailErr}
                                         </p>
                                     )}
@@ -232,7 +229,9 @@ export default function ChangeProfile() {
                             </>
                         ) : null}
                         {error && (
-                            <p className='text-red-500 text-sm mb-4'>{error}</p>
+                            <p className='text-red-500 text-sm mb-4 text-center'>
+                                {error}
+                            </p>
                         )}
                         {success ? (
                             <div className=' text-green-400 mb-1'>

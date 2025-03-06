@@ -12,26 +12,22 @@ const connection = mysql.createConnection({
 
 // =============== User ===============
 export async function createUser(username, password, email = null) {
-    try {
-        const hashedPassword = await hashPassword(password);
-
-        return new Promise((resolve, reject) => {
-            const sql = `INSERT INTO users(username, password, email) VALUES(?, ?, ?)`;
-            connection.query(
-                sql,
-                [username, hashedPassword, email],
-                (err, result) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(result);
-                    }
+    const hashedPassword = await hashPassword(password);
+    return new Promise((resolve, reject) => {
+        const sql = `INSERT INTO users(username, password, email) VALUES(?, ?, ?)`;
+        connection.query(
+            sql,
+            [username, hashedPassword, email],
+            (err, result) => {
+                if (err) {
+                    console.error(err);
+                    reject(err);
+                } else {
+                    resolve(result);
                 }
-            );
-        });
-    } catch (error) {
-        console.error(error);
-    }
+            }
+        );
+    });
 }
 
 export async function getUserByUsername(username) {
@@ -61,20 +57,17 @@ export async function getUsersByUsername(usernames) {
     });
 }
 export async function getUsersById(id) {
-    try {
-        const sql = `SELECT * FROM users WHERE id = ?`;
-        return new Promise((resolve, reject) => {
-            connection.query(sql, [id], (err, result) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    return resolve(result);
-                }
-            });
+    const sql = `SELECT * FROM users WHERE id = ?`;
+    return new Promise((resolve, reject) => {
+        connection.query(sql, [id], (err, result) => {
+            if (err) {
+                console.error(err);
+                reject(err);
+            } else {
+                return resolve(result);
+            }
         });
-    } catch (err) {
-        console.error(`error: ${err}`);
-    }
+    });
 }
 
 export async function getUserAllInfo(username) {
@@ -100,6 +93,7 @@ export async function getUserAllInfo(username) {
         ORDER BY games.created_at DESC`;
         connection.query(sql, [username], (err, results) => {
             if (err) {
+                console.error(err);
                 return reject(err);
             } else {
                 const data = {
@@ -132,6 +126,7 @@ export async function getUsersAll() {
         const sql = `SELECT id, username FROM users ORDER BY id`;
         connection.query(sql, (err, results) => {
             if (err) {
+                console.error(err);
                 return reject(err);
             } else {
                 return resolve(results);
@@ -141,89 +136,77 @@ export async function getUsersAll() {
 }
 
 export async function updateUser(id, data) {
-    try {
-        const keys = Object.keys(data);
-        if (keys.length === 0) {
-            throw new Error('No data provided to update');
-        }
-        const placeholders = keys.map((key) => `${key} = ?`).join(', ');
-        const values = [...Object.values(data), id];
-        const sql = `UPDATE users SET ${placeholders} WHERE id = ?`;
-        return new Promise((resolve, reject) => {
-            connection.query(sql, values, (err, results) => {
-                if (err) {
-                    console.error(err);
-                    return reject(err);
-                }
-                return resolve(results);
-            });
-        });
-    } catch (err) {
-        console.error(`Error: ${err.message}`);
-        throw err;
+    const keys = Object.keys(data);
+    if (keys.length === 0) {
+        throw new Error('No data provided to update');
     }
+    if (data.password) {
+        data.password = await hashPassword(data.password);
+    }
+    const placeholders = keys.map((key) => `${key} = ?`).join(', ');
+    const values = [...Object.values(data), id];
+    const sql = `UPDATE users SET ${placeholders} WHERE id = ?`;
+
+    return new Promise((resolve, reject) => {
+        connection.query(sql, values, (err, results) => {
+            if (err) {
+                console.error(err);
+                return reject(err);
+            }
+            return resolve(results);
+        });
+    });
 }
 
 // =============== Games ===============
 export async function createGame(player1_id, player2_id) {
-    try {
-        const playerId = player1_id;
-        const player2Id = player2_id;
-        const sql = `INSERT INTO games(player_1, player_2, status) VALUES(?, ?, ?)`;
-        return new Promise((resolve, reject) => {
-            connection.query(
-                sql,
-                [player1_id, player2_id, 'in process'],
-                (err, result) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        return resolve(result.insertId);
-                    }
+    const sql = `INSERT INTO games(player_1, player_2, status) VALUES(?, ?, ?)`;
+    return new Promise((resolve, reject) => {
+        connection.query(
+            sql,
+            [player1_id, player2_id, 'in process'],
+            (err, result) => {
+                if (err) {
+                    console.error(err);
+                    reject(err);
+                } else {
+                    return resolve(result.insertId);
                 }
-            );
-        });
-    } catch (err) {
-        console.error(`error: ${err}`);
-    }
+            }
+        );
+    });
 }
 
 export async function updateGame(gameId, status, winnerId, score) {
-    try {
-        const sql = `UPDATE games SET status = ?, winner = ?, score = ? WHERE id = ? AND (games.player_1 = ? OR games.player_2 = ?)`;
-        return new Promise((resolve, reject) => {
-            connection.query(
-                sql,
-                [status, winnerId, score, gameId, winnerId, winnerId],
-                (err, result) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        return resolve(result);
-                    }
+    const sql = `UPDATE games SET status = ?, winner = ?, score = ? WHERE id = ? AND (games.player_1 = ? OR games.player_2 = ?)`;
+    return new Promise((resolve, reject) => {
+        connection.query(
+            sql,
+            [status, winnerId, score, gameId, winnerId, winnerId],
+            (err, result) => {
+                if (err) {
+                    console.error(err);
+                    reject(err);
+                } else {
+                    return resolve(result);
                 }
-            );
-        });
-    } catch (err) {
-        console.error(`error: ${err}`);
-    }
+            }
+        );
+    });
 }
 
 export async function getGameById(id) {
-    try {
-        const sql = `SELECT * FROM games WHERE id = ?`;
-        return new Promise((resolve, reject) => {
-            connection.query(sql, [id], (err, result) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    return resolve(result[0]);
-                }
-            });
+    const sql = `SELECT * FROM games WHERE id = ?`;
+    return new Promise((resolve, reject) => {
+        connection.query(sql, [id], (err, result) => {
+            if (err) {
+                console.error(err);
+                reject(err);
+            } else {
+                return resolve(result[0]);
+            }
         });
-    } catch (err) {
-        console.error(`error: ${err}`);
-    }
+    });
 }
 
 function getStats(userId, games) {
